@@ -9,8 +9,74 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StudentsRouteImport } from './routes/students'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as LogbooksRouteImport } from './routes/logbooks'
+import { Route as LettersRouteImport } from './routes/letters'
+import { Route as CompanySupervisorsRouteImport } from './routes/company-supervisors'
+import { Route as CompaniesRouteImport } from './routes/companies'
+import { Route as AuditLogsRouteImport } from './routes/audit-logs'
+import { Route as ApplicationsRouteImport } from './routes/applications'
+import { Route as AcademicSupervisorsRouteImport } from './routes/academic-supervisors'
 import { Route as IndexRouteImport } from './routes/index'
 
+const StudentsRoute = StudentsRouteImport.update({
+  id: '/students',
+  path: '/students',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LogbooksRoute = LogbooksRouteImport.update({
+  id: '/logbooks',
+  path: '/logbooks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LettersRoute = LettersRouteImport.update({
+  id: '/letters',
+  path: '/letters',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompanySupervisorsRoute = CompanySupervisorsRouteImport.update({
+  id: '/company-supervisors',
+  path: '/company-supervisors',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompaniesRoute = CompaniesRouteImport.update({
+  id: '/companies',
+  path: '/companies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditLogsRoute = AuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApplicationsRoute = ApplicationsRouteImport.update({
+  id: '/applications',
+  path: '/applications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcademicSupervisorsRoute = AcademicSupervisorsRouteImport.update({
+  id: '/academic-supervisors',
+  path: '/academic-supervisors',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +85,186 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/academic-supervisors': typeof AcademicSupervisorsRoute
+  '/applications': typeof ApplicationsRoute
+  '/audit-logs': typeof AuditLogsRoute
+  '/companies': typeof CompaniesRoute
+  '/company-supervisors': typeof CompanySupervisorsRoute
+  '/letters': typeof LettersRoute
+  '/logbooks': typeof LogbooksRoute
+  '/notifications': typeof NotificationsRoute
+  '/reports': typeof ReportsRoute
+  '/settings': typeof SettingsRoute
+  '/students': typeof StudentsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/academic-supervisors': typeof AcademicSupervisorsRoute
+  '/applications': typeof ApplicationsRoute
+  '/audit-logs': typeof AuditLogsRoute
+  '/companies': typeof CompaniesRoute
+  '/company-supervisors': typeof CompanySupervisorsRoute
+  '/letters': typeof LettersRoute
+  '/logbooks': typeof LogbooksRoute
+  '/notifications': typeof NotificationsRoute
+  '/reports': typeof ReportsRoute
+  '/settings': typeof SettingsRoute
+  '/students': typeof StudentsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/academic-supervisors': typeof AcademicSupervisorsRoute
+  '/applications': typeof ApplicationsRoute
+  '/audit-logs': typeof AuditLogsRoute
+  '/companies': typeof CompaniesRoute
+  '/company-supervisors': typeof CompanySupervisorsRoute
+  '/letters': typeof LettersRoute
+  '/logbooks': typeof LogbooksRoute
+  '/notifications': typeof NotificationsRoute
+  '/reports': typeof ReportsRoute
+  '/settings': typeof SettingsRoute
+  '/students': typeof StudentsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/academic-supervisors'
+    | '/applications'
+    | '/audit-logs'
+    | '/companies'
+    | '/company-supervisors'
+    | '/letters'
+    | '/logbooks'
+    | '/notifications'
+    | '/reports'
+    | '/settings'
+    | '/students'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/academic-supervisors'
+    | '/applications'
+    | '/audit-logs'
+    | '/companies'
+    | '/company-supervisors'
+    | '/letters'
+    | '/logbooks'
+    | '/notifications'
+    | '/reports'
+    | '/settings'
+    | '/students'
+  id:
+    | '__root__'
+    | '/'
+    | '/academic-supervisors'
+    | '/applications'
+    | '/audit-logs'
+    | '/companies'
+    | '/company-supervisors'
+    | '/letters'
+    | '/logbooks'
+    | '/notifications'
+    | '/reports'
+    | '/settings'
+    | '/students'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AcademicSupervisorsRoute: typeof AcademicSupervisorsRoute
+  ApplicationsRoute: typeof ApplicationsRoute
+  AuditLogsRoute: typeof AuditLogsRoute
+  CompaniesRoute: typeof CompaniesRoute
+  CompanySupervisorsRoute: typeof CompanySupervisorsRoute
+  LettersRoute: typeof LettersRoute
+  LogbooksRoute: typeof LogbooksRoute
+  NotificationsRoute: typeof NotificationsRoute
+  ReportsRoute: typeof ReportsRoute
+  SettingsRoute: typeof SettingsRoute
+  StudentsRoute: typeof StudentsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/students': {
+      id: '/students'
+      path: '/students'
+      fullPath: '/students'
+      preLoaderRoute: typeof StudentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logbooks': {
+      id: '/logbooks'
+      path: '/logbooks'
+      fullPath: '/logbooks'
+      preLoaderRoute: typeof LogbooksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/letters': {
+      id: '/letters'
+      path: '/letters'
+      fullPath: '/letters'
+      preLoaderRoute: typeof LettersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/company-supervisors': {
+      id: '/company-supervisors'
+      path: '/company-supervisors'
+      fullPath: '/company-supervisors'
+      preLoaderRoute: typeof CompanySupervisorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/companies': {
+      id: '/companies'
+      path: '/companies'
+      fullPath: '/companies'
+      preLoaderRoute: typeof CompaniesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit-logs': {
+      id: '/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/audit-logs'
+      preLoaderRoute: typeof AuditLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/applications': {
+      id: '/applications'
+      path: '/applications'
+      fullPath: '/applications'
+      preLoaderRoute: typeof ApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/academic-supervisors': {
+      id: '/academic-supervisors'
+      path: '/academic-supervisors'
+      fullPath: '/academic-supervisors'
+      preLoaderRoute: typeof AcademicSupervisorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,17 +277,18 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AcademicSupervisorsRoute: AcademicSupervisorsRoute,
+  ApplicationsRoute: ApplicationsRoute,
+  AuditLogsRoute: AuditLogsRoute,
+  CompaniesRoute: CompaniesRoute,
+  CompanySupervisorsRoute: CompanySupervisorsRoute,
+  LettersRoute: LettersRoute,
+  LogbooksRoute: LogbooksRoute,
+  NotificationsRoute: NotificationsRoute,
+  ReportsRoute: ReportsRoute,
+  SettingsRoute: SettingsRoute,
+  StudentsRoute: StudentsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
