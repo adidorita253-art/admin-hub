@@ -272,3 +272,94 @@ export const attachmentLabel: Record<AttachmentStatus, string> = {
   ongoing: "Ongoing",
   completed: "Completed",
 };
+
+// ---------- Companies ----------
+const INDUSTRIES = [
+  "Telecommunications",
+  "Banking & Finance",
+  "Consulting",
+  "Software & Cloud",
+  "Agritech",
+  "Energy & Utilities",
+  "Fintech",
+  "Banking & Finance",
+  "Software Engineering",
+  "Mobile Money",
+];
+const SIZES: CompanySize[] = ["Startup", "SME", "Large", "Multinational"];
+const CITIES = [
+  ["Nairobi", "Nairobi"],
+  ["Mombasa", "Mombasa"],
+  ["Kisumu", "Kisumu"],
+  ["Nakuru", "Nakuru"],
+  ["Eldoret", "Uasin Gishu"],
+];
+
+const companyMeta: { website: string; address: string }[] = [
+  { website: "safaricom.co.ke", address: "Safaricom House, Waiyaki Way" },
+  { website: "equitybank.co.ke", address: "Equity Centre, Upper Hill" },
+  { website: "kpmg.com/ke", address: "ABC Towers, Waiyaki Way" },
+  { website: "microsoft.com", address: "Dunhill Towers, Westlands" },
+  { website: "twiga.com", address: "Wilson Business Park" },
+  { website: "kplc.co.ke", address: "Stima Plaza, Kolobot Road" },
+  { website: "cellulant.io", address: "Pinetree Plaza, Kilimani" },
+  { website: "imbankgroup.com", address: "I&M Bank House, 2nd Ngong Ave" },
+  { website: "andela.com", address: "Mirage Towers, Westlands" },
+  { website: "m-kopa.com", address: "Park Place, Parklands" },
+];
+
+export const companies: Company[] = COMPANIES.map((name, i) => {
+  const supForCo = companySupervisors.filter((s) => s.companyName === name);
+  const studentsHere = students.filter((s) => s.companyName === name);
+  const [city, county] = CITIES[i % CITIES.length];
+  const meta = companyMeta[i];
+  const initials = name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+  const status: CompanyStatus =
+    i === 5 ? "blacklisted" : i === 8 ? "pending" : "verified";
+  const contact = supForCo[0];
+  return {
+    id: `co-${i + 1}`,
+    name,
+    industry: INDUSTRIES[i % INDUSTRIES.length],
+    size: SIZES[i % SIZES.length],
+    email: `careers@${meta.website}`,
+    phone: `+254700${(100000 + i * 7919).toString().slice(0, 6)}`,
+    website: `https://www.${meta.website}`,
+    address: meta.address,
+    city,
+    county,
+    contactPerson: contact
+      ? `${contact.firstName} ${contact.lastName}`
+      : "HR Department",
+    contactJobTitle: contact?.jobTitle ?? "HR Manager",
+    logoText: initials,
+    status,
+    blacklistReason:
+      status === "blacklisted"
+        ? "Repeated late stipend payments and unsafe working conditions reported by 3 students."
+        : undefined,
+    capacity: 5 + (i % 4) * 5,
+    studentsHosted: studentsHere.length,
+    supervisorsCount: supForCo.length,
+    applicationsReceived: 8 + i * 3,
+    approvalRate: 55 + ((i * 7) % 40),
+    registeredAt: seedDate(i, 2022),
+    verifiedAt: status === "verified" ? seedDate(i, 2023) : null,
+    verifiedBy: status === "verified" ? "Admin User" : null,
+    notes:
+      status === "verified"
+        ? "Long-standing partner. Consistently provides quality mentorship."
+        : status === "pending"
+          ? "Awaiting verification of business registration documents."
+          : "Suspended pending investigation.",
+  };
+});
+
+export const findCompanyByName = (name: string | null) =>
+  name ? companies.find((c) => c.name === name) ?? null : null;
+
