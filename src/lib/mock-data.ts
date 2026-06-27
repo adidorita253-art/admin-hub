@@ -93,6 +93,36 @@ export interface CompanySupervisor {
   createdAt: string;
 }
 
+export type CompanyStatus = "verified" | "pending" | "blacklisted";
+export type CompanySize = "Startup" | "SME" | "Large" | "Multinational";
+
+export interface Company {
+  id: string;
+  name: string;
+  industry: string;
+  size: CompanySize;
+  email: string;
+  phone: string;
+  website: string;
+  address: string;
+  city: string;
+  county: string;
+  contactPerson: string;
+  contactJobTitle: string;
+  logoText: string; // initials
+  status: CompanyStatus;
+  blacklistReason?: string;
+  capacity: number;
+  studentsHosted: number;
+  supervisorsCount: number;
+  applicationsReceived: number;
+  approvalRate: number; // 0-100
+  registeredAt: string;
+  verifiedAt: string | null;
+  verifiedBy: string | null;
+  notes: string;
+}
+
 // ---------- generators ----------
 const FIRST = [
   "Wanjiku", "Brian", "Aisha", "Kevin", "Naomi", "James", "Faith", "Daniel",
