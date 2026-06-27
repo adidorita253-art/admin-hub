@@ -363,3 +363,198 @@ export const companies: Company[] = COMPANIES.map((name, i) => {
 export const findCompanyByName = (name: string | null) =>
   name ? companies.find((c) => c.name === name) ?? null : null;
 
+/* ---------------- Applications ---------------- */
+
+export type ApprovalStatus = "pending" | "approved" | "rejected" | "expired";
+export type LetterStatus =
+  | "not_generated"
+  | "generated"
+  | "sent"
+  | "viewed"
+  | "approved"
+  | "rejected"
+  | "expired";
+export type AppStage =
+  | "applied"
+  | "letter_generated"
+  | "letter_sent"
+  | "company_viewed"
+  | "awaiting_response"
+  | "approved"
+  | "rejected";
+
+export const APP_STAGES: AppStage[] = [
+  "applied",
+  "letter_generated",
+  "letter_sent",
+  "company_viewed",
+  "awaiting_response",
+  "approved",
+];
+
+export const stageLabel: Record<AppStage, string> = {
+  applied: "Applied",
+  letter_generated: "Letter Generated",
+  letter_sent: "Letter Sent",
+  company_viewed: "Company Viewed",
+  awaiting_response: "Awaiting Response",
+  approved: "Approved",
+  rejected: "Rejected",
+};
+
+export const approvalLabel: Record<ApprovalStatus, string> = {
+  pending: "Pending",
+  approved: "Approved",
+  rejected: "Rejected",
+  expired: "Expired",
+};
+
+export const letterLabel: Record<LetterStatus, string> = {
+  not_generated: "Not Generated",
+  generated: "Generated",
+  sent: "Sent",
+  viewed: "Viewed",
+  approved: "Approved",
+  rejected: "Rejected",
+  expired: "Expired",
+};
+
+export interface OtpEvent {
+  at: string;
+  type: "requested" | "verified";
+}
+
+export interface AppNote {
+  id: string;
+  author: string;
+  at: string;
+  text: string;
+}
+
+export interface Application {
+  id: string;
+  code: string;
+  studentId: string;
+  companyId: string;
+  companyName: string;
+  department: Department;
+  academicYear: string;
+  semester: "First" | "Second";
+  dateApplied: string;
+  letterStatus: LetterStatus;
+  approvalStatus: ApprovalStatus;
+  stage: AppStage;
+  academicSupervisorId: string | null;
+  qrLinkId: string;
+  qrLinkExpiresAt: string;
+  qrLinkRevoked: boolean;
+  qrLinkRevokedReason?: string;
+  companyResponseMessage?: string;
+  companyRespondedAt?: string;
+  rejectionReason?: string;
+  manualOverrideReason?: string;
+  otpEvents: OtpEvent[];
+  timeline: { stage: AppStage; at: string }[];
+  notes: AppNote[];
+  letterPdfUrl: string;
+}
+
+const STAGE_ROLL: { stage: AppStage; approval: ApprovalStatus; letter: LetterStatus }[] = [
+  { stage: "applied", approval: "pending", letter: "not_generated" },
+  { stage: "letter_generated", approval: "pending", letter: "generated" },
+  { stage: "letter_sent", approval: "pending", letter: "sent" },
+  { stage: "company_viewed", approval: "pending", letter: "viewed" },
+  { stage: "awaiting_response", approval: "pending", letter: "viewed" },
+  { stage: "approved", approval: "approved", letter: "approved" },
+  { stage: "rejected", approval: "rejected", letter: "rejected" },
+  { stage: "awaiting_response", approval: "expired", letter: "expired" },
+];
+
+const ACADEMIC_YEARS = ["2024/2025", "2025/2026"] as const;
+
+export const applications: Application[] = Array.from({ length: 28 }, (_, i) => {
+  const student = students[i % students.length];
+  const company = companies[i % companies.length];
+  const roll = STAGE_ROLL[i % STAGE_ROLL.length];
+  const dateApplied = seedDate(i + 1, 2026);
+  const t0 = new Date(dateApplied).getTime();
+  const day = 86400000;
+  const stageIdx = APP_STAGES.indexOf(
+    roll.stage === "rejected" ? "awaiting_response" : roll.stage,
+  );
+  const fullTimeline: { stage: AppStage; at: string }[] = [
+    { stage: "applied", at: new Date(t0).toISOString() },
+    { stage: "letter_generated", at: new Date(t0 + 1 * day).toISOString() },
+    { stage: "letter_sent", at: new Date(t0 + 2 * day).toISOString() },
+    { stage: "company_viewed", at: new Date(t0 + 4 * day).toISOString() },
+    { stage: "awaiting_response", at: new Date(t0 + 4 * day).toISOString() },
+    { stage: roll.stage, at: new Date(t0 + 7 * day).toISOString() },
+  ];
+  const timeline = fullTimeline.slice(
+    0,
+    Math.max(1, stageIdx + (roll.approval === "pending" ? 1 : 2)),
+  );
+  return {
+    id: `app-${i + 1}`,
+    code: `APP-2026-${(i + 1).toString().padStart(4, "0")}`,
+    studentId: student.id,
+    companyId: company.id,
+    companyName: company.name,
+    department: student.department,
+    academicYear: ACADEMIC_YEARS[i % 2],
+    semester: i % 2 === 0 ? "First" : "Second",
+    dateApplied,
+    letterStatus: roll.letter,
+    approvalStatus: roll.approval,
+    stage: roll.stage,
+    academicSupervisorId:
+      i % 5 === 0 ? null : academicSupervisors[i % academicSupervisors.length].id,
+    qrLinkId: `QR-${(1000 + i).toString(36).toUpperCase()}`,
+    qrLinkExpiresAt: new Date(t0 + 14 * day).toISOString(),
+    qrLinkRevoked: false,
+    companyResponseMessage:
+      roll.approval === "approved"
+        ? "Confirmed. The student may report on the agreed start date."
+        : roll.approval === "rejected"
+          ? "Capacity for this intake has been fully allocated."
+          : undefined,
+    companyRespondedAt:
+      roll.approval === "approved" || roll.approval === "rejected"
+        ? new Date(t0 + 7 * day).toISOString()
+        : undefined,
+    rejectionReason:
+      roll.approval === "rejected" ? "Capacity full for this intake" : undefined,
+    otpEvents:
+      roll.stage === "company_viewed" ||
+      roll.stage === "awaiting_response" ||
+      roll.approval === "approved" ||
+      roll.approval === "rejected"
+        ? [
+            { at: new Date(t0 + 3 * day).toISOString(), type: "requested" },
+            { at: new Date(t0 + 3 * day + 600000).toISOString(), type: "verified" },
+          ]
+        : [],
+    timeline,
+    notes:
+      i % 4 === 0
+        ? [
+            {
+              id: `n-${i}-1`,
+              author: "Admin User",
+              at: new Date(t0 + 2 * day).toISOString(),
+              text: "Followed up with company HR via phone.",
+            },
+          ]
+        : [],
+    letterPdfUrl: "#",
+  };
+});
+
+export const findStudent = (id: string) =>
+  students.find((s) => s.id === id) ?? null;
+export const findCompany = (id: string) =>
+  companies.find((c) => c.id === id) ?? null;
+export const findApplication = (id: string) =>
+  applications.find((a) => a.id === id) ?? null;
+
+
