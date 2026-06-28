@@ -21,6 +21,7 @@ import { Route as AuditLogsRouteImport } from './routes/audit-logs'
 import { Route as ApplicationsRouteImport } from './routes/applications'
 import { Route as AcademicSupervisorsRouteImport } from './routes/academic-supervisors'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApplicationsIdRouteImport } from './routes/applications.$id'
 
 const StudentsRoute = StudentsRouteImport.update({
   id: '/students',
@@ -82,11 +83,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApplicationsIdRoute = ApplicationsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApplicationsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/academic-supervisors': typeof AcademicSupervisorsRoute
-  '/applications': typeof ApplicationsRoute
+  '/applications': typeof ApplicationsRouteWithChildren
   '/audit-logs': typeof AuditLogsRoute
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
@@ -96,11 +102,12 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/students': typeof StudentsRoute
+  '/applications/$id': typeof ApplicationsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/academic-supervisors': typeof AcademicSupervisorsRoute
-  '/applications': typeof ApplicationsRoute
+  '/applications': typeof ApplicationsRouteWithChildren
   '/audit-logs': typeof AuditLogsRoute
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
@@ -110,12 +117,13 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/students': typeof StudentsRoute
+  '/applications/$id': typeof ApplicationsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/academic-supervisors': typeof AcademicSupervisorsRoute
-  '/applications': typeof ApplicationsRoute
+  '/applications': typeof ApplicationsRouteWithChildren
   '/audit-logs': typeof AuditLogsRoute
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/students': typeof StudentsRoute
+  '/applications/$id': typeof ApplicationsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/students'
+    | '/applications/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/students'
+    | '/applications/$id'
   id:
     | '__root__'
     | '/'
@@ -169,12 +180,13 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/students'
+    | '/applications/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcademicSupervisorsRoute: typeof AcademicSupervisorsRoute
-  ApplicationsRoute: typeof ApplicationsRoute
+  ApplicationsRoute: typeof ApplicationsRouteWithChildren
   AuditLogsRoute: typeof AuditLogsRoute
   CompaniesRoute: typeof CompaniesRoute
   CompanySupervisorsRoute: typeof CompanySupervisorsRoute
@@ -272,13 +284,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/applications/$id': {
+      id: '/applications/$id'
+      path: '/$id'
+      fullPath: '/applications/$id'
+      preLoaderRoute: typeof ApplicationsIdRouteImport
+      parentRoute: typeof ApplicationsRoute
+    }
   }
 }
+
+interface ApplicationsRouteChildren {
+  ApplicationsIdRoute: typeof ApplicationsIdRoute
+}
+
+const ApplicationsRouteChildren: ApplicationsRouteChildren = {
+  ApplicationsIdRoute: ApplicationsIdRoute,
+}
+
+const ApplicationsRouteWithChildren = ApplicationsRoute._addFileChildren(
+  ApplicationsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcademicSupervisorsRoute: AcademicSupervisorsRoute,
-  ApplicationsRoute: ApplicationsRoute,
+  ApplicationsRoute: ApplicationsRouteWithChildren,
   AuditLogsRoute: AuditLogsRoute,
   CompaniesRoute: CompaniesRoute,
   CompanySupervisorsRoute: CompanySupervisorsRoute,
