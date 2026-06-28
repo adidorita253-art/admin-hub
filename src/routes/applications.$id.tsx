@@ -188,9 +188,9 @@ function ApplicationDetailPage() {
       return;
     }
     applicationsStore.update(app.id, {
-      qlLinkRevoked: false,
+      qrLinkRevoked: false,
       qrLinkExpiresAt: new Date(extendDate).toISOString(),
-    } as never);
+    });
     applicationsStore.addNote(
       app.id,
       `Approval link expiry extended to ${new Date(extendDate).toLocaleDateString()}.`,
