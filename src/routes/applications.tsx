@@ -183,9 +183,9 @@ function ApplicationsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Departments</SelectItem>
-                {DEPARTMENTS.map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {d}
+                {activeDepartments.map((d) => (
+                  <SelectItem key={d.id} value={d.name}>
+                    {d.name}
                   </SelectItem>
                 ))}
               </SelectContent>
