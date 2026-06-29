@@ -70,6 +70,7 @@ import {
   type Student,
 } from "@/lib/mock-data";
 import { AttachmentPill, StatusPill } from "@/components/status-pill";
+import { useActiveDepartments } from "@/lib/settings-store";
 
 export const Route = createFileRoute("/students")({
   head: () => ({ meta: [{ title: "Students — Attachment Admin" }] }),
@@ -77,6 +78,7 @@ export const Route = createFileRoute("/students")({
 });
 
 function StudentsPage() {
+  const activeDepartments = useActiveDepartments();
   const [data, setData] = useState<Student[]>(seedStudents);
   const [query, setQuery] = useState("");
   const [dept, setDept] = useState<string>("all");
@@ -191,9 +193,9 @@ function StudentsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All departments</SelectItem>
-                {DEPARTMENTS.map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {d}
+                {activeDepartments.map((d) => (
+                  <SelectItem key={d.id} value={d.name}>
+                    {d.name}
                   </SelectItem>
                 ))}
               </SelectContent>

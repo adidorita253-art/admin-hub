@@ -63,6 +63,7 @@ import {
   type AcademicSupervisor,
 } from "@/lib/mock-data";
 import { StatusPill, AttachmentPill } from "@/components/status-pill";
+import { useActiveDepartments } from "@/lib/settings-store";
 
 export const Route = createFileRoute("/academic-supervisors")({
   head: () => ({ meta: [{ title: "Academic Supervisors — Attachment Admin" }] }),
@@ -70,6 +71,7 @@ export const Route = createFileRoute("/academic-supervisors")({
 });
 
 function AcademicSupervisorsPage() {
+  const activeDepartments = useActiveDepartments();
   const [data, setData] = useState<AcademicSupervisor[]>(seed);
   const [query, setQuery] = useState("");
   const [dept, setDept] = useState("all");
@@ -145,9 +147,9 @@ function AcademicSupervisorsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All departments</SelectItem>
-              {DEPARTMENTS.map((d) => (
-                <SelectItem key={d} value={d}>
-                  {d}
+              {activeDepartments.map((d) => (
+                <SelectItem key={d.id} value={d.name}>
+                  {d.name}
                 </SelectItem>
               ))}
             </SelectContent>
