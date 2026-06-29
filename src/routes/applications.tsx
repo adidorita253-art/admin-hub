@@ -40,6 +40,7 @@ import {
   type ApprovalStatus,
 } from "@/lib/mock-data";
 import { useApplications } from "@/lib/applications-store";
+import { useActiveDepartments } from "@/lib/settings-store";
 
 export const Route = createFileRoute("/applications")({
   head: () => ({ meta: [{ title: "Applications — Attachment Admin" }] }),
@@ -58,6 +59,7 @@ function fmtDate(d: string) {
 
 function ApplicationsPage() {
   const apps = useApplications();
+  const activeDepartments = useActiveDepartments();
   const [search, setSearch] = useState("");
   const [approval, setApproval] = useState<string>("all");
   const [stage, setStage] = useState<string>("all");
