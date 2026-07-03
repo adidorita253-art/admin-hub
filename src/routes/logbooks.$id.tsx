@@ -417,7 +417,7 @@ function FinalGradeEditor({
   const [reason, setReason] = useState("");
   return (
     <div className="flex flex-wrap items-end gap-2">
-      <Select value={g} onValueChange={(v) => setG(v as Grade)}>
+      <Select value={g || undefined} onValueChange={(v) => setG(v as Grade)}>
         <SelectTrigger className="w-32"><SelectValue placeholder="Grade" /></SelectTrigger>
         <SelectContent>
           {GRADES.map((x) => (
