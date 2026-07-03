@@ -21,6 +21,7 @@ import { Route as AuditLogsRouteImport } from './routes/audit-logs'
 import { Route as ApplicationsRouteImport } from './routes/applications'
 import { Route as AcademicSupervisorsRouteImport } from './routes/academic-supervisors'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LogbooksIdRouteImport } from './routes/logbooks.$id'
 import { Route as ApplicationsIdRouteImport } from './routes/applications.$id'
 
 const StudentsRoute = StudentsRouteImport.update({
@@ -83,6 +84,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LogbooksIdRoute = LogbooksIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => LogbooksRoute,
+} as any)
 const ApplicationsIdRoute = ApplicationsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -97,12 +103,13 @@ export interface FileRoutesByFullPath {
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
   '/letters': typeof LettersRoute
-  '/logbooks': typeof LogbooksRoute
+  '/logbooks': typeof LogbooksRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
+  '/logbooks/$id': typeof LogbooksIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -112,12 +119,13 @@ export interface FileRoutesByTo {
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
   '/letters': typeof LettersRoute
-  '/logbooks': typeof LogbooksRoute
+  '/logbooks': typeof LogbooksRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
+  '/logbooks/$id': typeof LogbooksIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -128,12 +136,13 @@ export interface FileRoutesById {
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
   '/letters': typeof LettersRoute
-  '/logbooks': typeof LogbooksRoute
+  '/logbooks': typeof LogbooksRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
+  '/logbooks/$id': typeof LogbooksIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/students'
     | '/applications/$id'
+    | '/logbooks/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/students'
     | '/applications/$id'
+    | '/logbooks/$id'
   id:
     | '__root__'
     | '/'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/students'
     | '/applications/$id'
+    | '/logbooks/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -191,7 +203,7 @@ export interface RootRouteChildren {
   CompaniesRoute: typeof CompaniesRoute
   CompanySupervisorsRoute: typeof CompanySupervisorsRoute
   LettersRoute: typeof LettersRoute
-  LogbooksRoute: typeof LogbooksRoute
+  LogbooksRoute: typeof LogbooksRouteWithChildren
   NotificationsRoute: typeof NotificationsRoute
   ReportsRoute: typeof ReportsRoute
   SettingsRoute: typeof SettingsRoute
@@ -284,6 +296,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/logbooks/$id': {
+      id: '/logbooks/$id'
+      path: '/$id'
+      fullPath: '/logbooks/$id'
+      preLoaderRoute: typeof LogbooksIdRouteImport
+      parentRoute: typeof LogbooksRoute
+    }
     '/applications/$id': {
       id: '/applications/$id'
       path: '/$id'
@@ -306,6 +325,18 @@ const ApplicationsRouteWithChildren = ApplicationsRoute._addFileChildren(
   ApplicationsRouteChildren,
 )
 
+interface LogbooksRouteChildren {
+  LogbooksIdRoute: typeof LogbooksIdRoute
+}
+
+const LogbooksRouteChildren: LogbooksRouteChildren = {
+  LogbooksIdRoute: LogbooksIdRoute,
+}
+
+const LogbooksRouteWithChildren = LogbooksRoute._addFileChildren(
+  LogbooksRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcademicSupervisorsRoute: AcademicSupervisorsRoute,
@@ -314,7 +345,7 @@ const rootRouteChildren: RootRouteChildren = {
   CompaniesRoute: CompaniesRoute,
   CompanySupervisorsRoute: CompanySupervisorsRoute,
   LettersRoute: LettersRoute,
-  LogbooksRoute: LogbooksRoute,
+  LogbooksRoute: LogbooksRouteWithChildren,
   NotificationsRoute: NotificationsRoute,
   ReportsRoute: ReportsRoute,
   SettingsRoute: SettingsRoute,
