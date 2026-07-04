@@ -203,14 +203,17 @@ function buildWeek(
     }
   }
 
-  const g = (offset: number): Grade => GRADES[(seed + offset) % 4]; // A+..B
+  const r4 = (offset: number): Rating4 =>
+    RATING4[(seed + offset) % RATING4.length];
+  const r3 = (offset: number): Rating3 =>
+    RATING3[(seed + offset) % RATING3.length];
   const company: CompanyAssessment = {
-    attendance: g(1),
-    discipline: g(2),
-    punctuality: g(3),
-    workOnSchedule: g(4),
-    workUnderPressure: g(5),
-    generalAptitude: g(6),
+    attendance: r4(1),
+    discipline: r4(2),
+    punctuality: r4(3),
+    workOnSchedule: r3(4),
+    workUnderPressure: r3(5),
+    generalAptitude: r3(6),
     section: pick(SECTIONS, seed + weekNumber),
     comments:
       companyStatus === "endorsed"
