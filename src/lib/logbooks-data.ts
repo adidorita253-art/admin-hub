@@ -12,6 +12,12 @@ import {
 export type Grade = "A+" | "A" | "B+" | "B" | "C+" | "C" | "D+" | "D" | "F";
 export const GRADES: Grade[] = ["A+", "A", "B+", "B", "C+", "C", "D+", "D", "F"];
 
+export type Rating4 = "Poor" | "Satisfactory" | "Good" | "Very Good";
+export const RATING4: Rating4[] = ["Poor", "Satisfactory", "Good", "Very Good"];
+
+export type Rating3 = "Weak" | "Average" | "Above Average";
+export const RATING3: Rating3[] = ["Weak", "Average", "Above Average"];
+
 export type CompanyEndorseStatus = "pending" | "endorsed" | "flagged";
 export type AcademicEndorseStatus =
   | "pending"
@@ -46,12 +52,12 @@ export interface DailyEntry {
 }
 
 export interface CompanyAssessment {
-  attendance: Grade;
-  discipline: Grade;
-  punctuality: Grade;
-  workOnSchedule: Grade;
-  workUnderPressure: Grade;
-  generalAptitude: Grade;
+  attendance: Rating4;
+  discipline: Rating4;
+  punctuality: Rating4;
+  workOnSchedule: Rating3;
+  workUnderPressure: Rating3;
+  generalAptitude: Rating3;
   section: string;
   comments: string;
   endorsedByName: string;
@@ -197,14 +203,17 @@ function buildWeek(
     }
   }
 
-  const g = (offset: number): Grade => GRADES[(seed + offset) % 4]; // A+..B
+  const r4 = (offset: number): Rating4 =>
+    RATING4[(seed + offset) % RATING4.length];
+  const r3 = (offset: number): Rating3 =>
+    RATING3[(seed + offset) % RATING3.length];
   const company: CompanyAssessment = {
-    attendance: g(1),
-    discipline: g(2),
-    punctuality: g(3),
-    workOnSchedule: g(4),
-    workUnderPressure: g(5),
-    generalAptitude: g(6),
+    attendance: r4(1),
+    discipline: r4(2),
+    punctuality: r4(3),
+    workOnSchedule: r3(4),
+    workUnderPressure: r3(5),
+    generalAptitude: r3(6),
     section: pick(SECTIONS, seed + weekNumber),
     comments:
       companyStatus === "endorsed"
