@@ -12,6 +12,12 @@ import {
 export type Grade = "A+" | "A" | "B+" | "B" | "C+" | "C" | "D+" | "D" | "F";
 export const GRADES: Grade[] = ["A+", "A", "B+", "B", "C+", "C", "D+", "D", "F"];
 
+export type Rating4 = "Poor" | "Satisfactory" | "Good" | "Very Good";
+export const RATING4: Rating4[] = ["Poor", "Satisfactory", "Good", "Very Good"];
+
+export type Rating3 = "Weak" | "Average" | "Above Average";
+export const RATING3: Rating3[] = ["Weak", "Average", "Above Average"];
+
 export type CompanyEndorseStatus = "pending" | "endorsed" | "flagged";
 export type AcademicEndorseStatus =
   | "pending"
@@ -46,12 +52,12 @@ export interface DailyEntry {
 }
 
 export interface CompanyAssessment {
-  attendance: Grade;
-  discipline: Grade;
-  punctuality: Grade;
-  workOnSchedule: Grade;
-  workUnderPressure: Grade;
-  generalAptitude: Grade;
+  attendance: Rating4;
+  discipline: Rating4;
+  punctuality: Rating4;
+  workOnSchedule: Rating3;
+  workUnderPressure: Rating3;
+  generalAptitude: Rating3;
   section: string;
   comments: string;
   endorsedByName: string;
