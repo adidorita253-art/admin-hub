@@ -56,6 +56,7 @@ import {
   type LogbookStatus,
 } from "@/lib/logbooks-data";
 import { useLogbooks } from "@/lib/logbooks-store";
+import { exportLogbookPDF, exportLogbookExcel } from "@/lib/logbooks-export";
 
 export const Route = createFileRoute("/logbooks")({
   head: () => ({ meta: [{ title: "Logbooks — Attachment Admin" }] }),
