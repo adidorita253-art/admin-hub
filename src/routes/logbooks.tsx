@@ -10,7 +10,7 @@ function LogbooksLayout() {
     select: (matches) =>
       matches.some(
         (match) =>
-          match.routeId === "/logbooks/" || match.routeId === "/logbooks/$id",
+          match.routeId === "/logbooks/$id",
       ),
   });
 
