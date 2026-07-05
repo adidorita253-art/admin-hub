@@ -13,7 +13,6 @@ import { Route as StudentsRouteImport } from './routes/students'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as NotificationsRouteImport } from './routes/notifications'
-import { Route as LogbooksRouteImport } from './routes/logbooks'
 import { Route as LettersRouteImport } from './routes/letters'
 import { Route as CompanySupervisorsRouteImport } from './routes/company-supervisors'
 import { Route as CompaniesRouteImport } from './routes/companies'
@@ -21,6 +20,7 @@ import { Route as AuditLogsRouteImport } from './routes/audit-logs'
 import { Route as ApplicationsRouteImport } from './routes/applications'
 import { Route as AcademicSupervisorsRouteImport } from './routes/academic-supervisors'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LogbooksIndexRouteImport } from './routes/logbooks.index'
 import { Route as LogbooksIdRouteImport } from './routes/logbooks.$id'
 import { Route as ApplicationsIdRouteImport } from './routes/applications.$id'
 
@@ -42,11 +42,6 @@ const ReportsRoute = ReportsRouteImport.update({
 const NotificationsRoute = NotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LogbooksRoute = LogbooksRouteImport.update({
-  id: '/logbooks',
-  path: '/logbooks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LettersRoute = LettersRouteImport.update({
@@ -84,10 +79,15 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LogbooksIndexRoute = LogbooksIndexRouteImport.update({
+  id: '/logbooks/',
+  path: '/logbooks/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LogbooksIdRoute = LogbooksIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => LogbooksRoute,
+  id: '/logbooks/$id',
+  path: '/logbooks/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApplicationsIdRoute = ApplicationsIdRouteImport.update({
   id: '/$id',
@@ -103,13 +103,13 @@ export interface FileRoutesByFullPath {
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
   '/letters': typeof LettersRoute
-  '/logbooks': typeof LogbooksRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/logbooks/$id': typeof LogbooksIdRoute
+  '/logbooks/': typeof LogbooksIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -119,13 +119,13 @@ export interface FileRoutesByTo {
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
   '/letters': typeof LettersRoute
-  '/logbooks': typeof LogbooksRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/logbooks/$id': typeof LogbooksIdRoute
+  '/logbooks': typeof LogbooksIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -136,13 +136,13 @@ export interface FileRoutesById {
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
   '/letters': typeof LettersRoute
-  '/logbooks': typeof LogbooksRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/logbooks/$id': typeof LogbooksIdRoute
+  '/logbooks/': typeof LogbooksIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -154,13 +154,13 @@ export interface FileRouteTypes {
     | '/companies'
     | '/company-supervisors'
     | '/letters'
-    | '/logbooks'
     | '/notifications'
     | '/reports'
     | '/settings'
     | '/students'
     | '/applications/$id'
     | '/logbooks/$id'
+    | '/logbooks/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -170,13 +170,13 @@ export interface FileRouteTypes {
     | '/companies'
     | '/company-supervisors'
     | '/letters'
-    | '/logbooks'
     | '/notifications'
     | '/reports'
     | '/settings'
     | '/students'
     | '/applications/$id'
     | '/logbooks/$id'
+    | '/logbooks'
   id:
     | '__root__'
     | '/'
@@ -186,13 +186,13 @@ export interface FileRouteTypes {
     | '/companies'
     | '/company-supervisors'
     | '/letters'
-    | '/logbooks'
     | '/notifications'
     | '/reports'
     | '/settings'
     | '/students'
     | '/applications/$id'
     | '/logbooks/$id'
+    | '/logbooks/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -203,11 +203,12 @@ export interface RootRouteChildren {
   CompaniesRoute: typeof CompaniesRoute
   CompanySupervisorsRoute: typeof CompanySupervisorsRoute
   LettersRoute: typeof LettersRoute
-  LogbooksRoute: typeof LogbooksRouteWithChildren
   NotificationsRoute: typeof NotificationsRoute
   ReportsRoute: typeof ReportsRoute
   SettingsRoute: typeof SettingsRoute
   StudentsRoute: typeof StudentsRoute
+  LogbooksIdRoute: typeof LogbooksIdRoute
+  LogbooksIndexRoute: typeof LogbooksIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -238,13 +239,6 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof NotificationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/logbooks': {
-      id: '/logbooks'
-      path: '/logbooks'
-      fullPath: '/logbooks'
-      preLoaderRoute: typeof LogbooksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/letters': {
@@ -296,12 +290,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/logbooks/': {
+      id: '/logbooks/'
+      path: '/logbooks'
+      fullPath: '/logbooks/'
+      preLoaderRoute: typeof LogbooksIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/logbooks/$id': {
       id: '/logbooks/$id'
-      path: '/$id'
+      path: '/logbooks/$id'
       fullPath: '/logbooks/$id'
       preLoaderRoute: typeof LogbooksIdRouteImport
-      parentRoute: typeof LogbooksRoute
+      parentRoute: typeof rootRouteImport
     }
     '/applications/$id': {
       id: '/applications/$id'
@@ -325,18 +326,6 @@ const ApplicationsRouteWithChildren = ApplicationsRoute._addFileChildren(
   ApplicationsRouteChildren,
 )
 
-interface LogbooksRouteChildren {
-  LogbooksIdRoute: typeof LogbooksIdRoute
-}
-
-const LogbooksRouteChildren: LogbooksRouteChildren = {
-  LogbooksIdRoute: LogbooksIdRoute,
-}
-
-const LogbooksRouteWithChildren = LogbooksRoute._addFileChildren(
-  LogbooksRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcademicSupervisorsRoute: AcademicSupervisorsRoute,
@@ -345,11 +334,12 @@ const rootRouteChildren: RootRouteChildren = {
   CompaniesRoute: CompaniesRoute,
   CompanySupervisorsRoute: CompanySupervisorsRoute,
   LettersRoute: LettersRoute,
-  LogbooksRoute: LogbooksRouteWithChildren,
   NotificationsRoute: NotificationsRoute,
   ReportsRoute: ReportsRoute,
   SettingsRoute: SettingsRoute,
   StudentsRoute: StudentsRoute,
+  LogbooksIdRoute: LogbooksIdRoute,
+  LogbooksIndexRoute: LogbooksIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
