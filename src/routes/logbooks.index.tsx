@@ -128,7 +128,7 @@ type SortKey =
   | "grade"
   | "status";
 
-function LogbooksPage() {
+export function LogbooksIndexPage() {
   const logbooks = useLogbooks();
   const activeDepartments = useActiveDepartments();
   const [search, setSearch] = useState("");
