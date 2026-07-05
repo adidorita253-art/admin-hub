@@ -1,5 +1,5 @@
 import { Outlet, createFileRoute, useMatches } from "@tanstack/react-router";
-import { LogbooksIndexPage } from "./logbooks.index";
+import { LogbooksIndexPage } from "@/components/logbooks-index-page";
 
 export const Route = createFileRoute("/logbooks")({
   component: LogbooksLayout,

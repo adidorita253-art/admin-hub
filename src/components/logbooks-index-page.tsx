@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   BookOpen,
@@ -57,11 +57,6 @@ import {
 } from "@/lib/logbooks-data";
 import { useLogbooks } from "@/lib/logbooks-store";
 import { exportLogbookPDF, exportLogbookExcel } from "@/lib/logbooks-export";
-
-export const Route = createFileRoute("/logbooks/")({
-  head: () => ({ meta: [{ title: "Logbooks — Attachment Admin" }] }),
-  component: LogbooksIndexPage,
-});
 
 const STATUSES: LogbookStatus[] = [
   "active",
