@@ -66,7 +66,7 @@ import { logbooksStore, useLogbook } from "@/lib/logbooks-store";
 import { exportLogbookPDF, exportLogbookExcel } from "@/lib/logbooks-export";
 
 export const Route = createFileRoute("/logbooks/$id")({
-  validateSearch: z.object({ edit: z.boolean().optional() }),
+  validateSearch: z.object({ edit: z.coerce.boolean().optional() }),
   head: () => ({ meta: [{ title: "Logbook Detail — Attachment Admin" }] }),
   component: LogbookDetailPage,
   notFoundComponent: () => (
