@@ -257,6 +257,7 @@ function LogbookDetailPage() {
               week={w}
               logbookId={lb.id}
               firstEditRef={i === 0 ? firstEditRef : undefined}
+              openForEdit={Boolean(edit && i === 0)}
             />
           ))}
         </CardContent>
@@ -412,12 +413,19 @@ function WeekBlock({
   week,
   logbookId,
   firstEditRef,
+  openForEdit = false,
 }: {
   week: WeekEntry;
   logbookId: string;
   firstEditRef?: React.RefObject<HTMLDivElement | null>;
+  openForEdit?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(openForEdit);
+
+  useEffect(() => {
+    if (openForEdit) setOpen(true);
+  }, [openForEdit]);
+
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <div className="rounded-md border">
