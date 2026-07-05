@@ -63,6 +63,7 @@ import {
   type WeekEntry,
 } from "@/lib/logbooks-data";
 import { logbooksStore, useLogbook } from "@/lib/logbooks-store";
+import { exportLogbookPDF, exportLogbookExcel } from "@/lib/logbooks-export";
 
 export const Route = createFileRoute("/logbooks/$id")({
   validateSearch: z.object({ edit: z.boolean().optional() }),
