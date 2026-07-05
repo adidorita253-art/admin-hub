@@ -66,7 +66,7 @@ import { logbooksStore, useLogbook } from "@/lib/logbooks-store";
 import { exportLogbookPDF, exportLogbookExcel } from "@/lib/logbooks-export";
 
 export const Route = createFileRoute("/logbooks/$id")({
-  validateSearch: z.object({ edit: z.boolean().optional() }),
+  validateSearch: z.object({ edit: z.coerce.boolean().optional() }),
   head: () => ({ meta: [{ title: "Logbook Detail — Attachment Admin" }] }),
   component: LogbookDetailPage,
   notFoundComponent: () => (
@@ -257,6 +257,7 @@ function LogbookDetailPage() {
               week={w}
               logbookId={lb.id}
               firstEditRef={i === 0 ? firstEditRef : undefined}
+              openForEdit={Boolean(edit && i === 0)}
             />
           ))}
         </CardContent>
@@ -412,12 +413,19 @@ function WeekBlock({
   week,
   logbookId,
   firstEditRef,
+  openForEdit = false,
 }: {
   week: WeekEntry;
   logbookId: string;
   firstEditRef?: React.RefObject<HTMLDivElement | null>;
+  openForEdit?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(openForEdit);
+
+  useEffect(() => {
+    if (openForEdit) setOpen(true);
+  }, [openForEdit]);
+
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <div className="rounded-md border">
