@@ -21,6 +21,7 @@ import { Route as AuditLogsRouteImport } from './routes/audit-logs'
 import { Route as ApplicationsRouteImport } from './routes/applications'
 import { Route as AcademicSupervisorsRouteImport } from './routes/academic-supervisors'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LogbooksIndexRouteImport } from './routes/logbooks.index'
 import { Route as LogbooksIdRouteImport } from './routes/logbooks.$id'
 import { Route as ApplicationsIdRouteImport } from './routes/applications.$id'
 
@@ -84,6 +85,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LogbooksIndexRoute = LogbooksIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LogbooksRoute,
+} as any)
 const LogbooksIdRoute = LogbooksIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/logbooks/$id': typeof LogbooksIdRoute
+  '/logbooks/': typeof LogbooksIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -119,13 +126,13 @@ export interface FileRoutesByTo {
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
   '/letters': typeof LettersRoute
-  '/logbooks': typeof LogbooksRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/reports': typeof ReportsRoute
   '/settings': typeof SettingsRoute
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/logbooks/$id': typeof LogbooksIdRoute
+  '/logbooks': typeof LogbooksIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +150,7 @@ export interface FileRoutesById {
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/logbooks/$id': typeof LogbooksIdRoute
+  '/logbooks/': typeof LogbooksIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +169,7 @@ export interface FileRouteTypes {
     | '/students'
     | '/applications/$id'
     | '/logbooks/$id'
+    | '/logbooks/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -170,13 +179,13 @@ export interface FileRouteTypes {
     | '/companies'
     | '/company-supervisors'
     | '/letters'
-    | '/logbooks'
     | '/notifications'
     | '/reports'
     | '/settings'
     | '/students'
     | '/applications/$id'
     | '/logbooks/$id'
+    | '/logbooks'
   id:
     | '__root__'
     | '/'
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
     | '/students'
     | '/applications/$id'
     | '/logbooks/$id'
+    | '/logbooks/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -296,6 +306,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/logbooks/': {
+      id: '/logbooks/'
+      path: '/'
+      fullPath: '/logbooks/'
+      preLoaderRoute: typeof LogbooksIndexRouteImport
+      parentRoute: typeof LogbooksRoute
+    }
     '/logbooks/$id': {
       id: '/logbooks/$id'
       path: '/$id'
@@ -327,10 +344,12 @@ const ApplicationsRouteWithChildren = ApplicationsRoute._addFileChildren(
 
 interface LogbooksRouteChildren {
   LogbooksIdRoute: typeof LogbooksIdRoute
+  LogbooksIndexRoute: typeof LogbooksIndexRoute
 }
 
 const LogbooksRouteChildren: LogbooksRouteChildren = {
   LogbooksIdRoute: LogbooksIdRoute,
+  LogbooksIndexRoute: LogbooksIndexRoute,
 }
 
 const LogbooksRouteWithChildren = LogbooksRoute._addFileChildren(
