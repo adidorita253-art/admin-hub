@@ -526,17 +526,31 @@ function LogbooksPage() {
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() =>
-                                toast.success("PDF export queued")
-                              }
+                              onClick={() => {
+                                try {
+                                  exportLogbookPDF(r.lb);
+                                  toast.success("PDF downloaded");
+                                } catch (e) {
+                                  toast.error("PDF export failed", {
+                                    description: String((e as Error).message),
+                                  });
+                                }
+                              }}
                             >
                               <FileDown className="mr-2 h-4 w-4" />
                               Export as PDF
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() =>
-                                toast.success("Excel export queued")
-                              }
+                              onClick={() => {
+                                try {
+                                  exportLogbookExcel(r.lb);
+                                  toast.success("Excel downloaded");
+                                } catch (e) {
+                                  toast.error("Excel export failed", {
+                                    description: String((e as Error).message),
+                                  });
+                                }
+                              }}
                             >
                               <FileSpreadsheet className="mr-2 h-4 w-4" />
                               Export as Excel
