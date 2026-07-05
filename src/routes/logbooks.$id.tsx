@@ -187,10 +187,10 @@ function LogbookDetailPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => toast.success("PDF export queued", { description: `Logbook_${student?.firstName}_${student?.regNumber}.pdf` })}>
+          <Button variant="outline" onClick={() => { try { exportLogbookPDF(lb); toast.success("PDF downloaded"); } catch (e) { toast.error("PDF export failed", { description: String((e as Error).message) }); } }}>
             <Download className="mr-1 h-4 w-4" /> Export as PDF
           </Button>
-          <Button variant="outline" onClick={() => toast.success("Excel export queued", { description: `Logbook_${student?.firstName}_${student?.regNumber}.xlsx` })}>
+          <Button variant="outline" onClick={() => { try { exportLogbookExcel(lb); toast.success("Excel downloaded"); } catch (e) { toast.error("Excel export failed", { description: String((e as Error).message) }); } }}>
             <FileSpreadsheet className="mr-1 h-4 w-4" /> Export as Excel
           </Button>
           <Button
