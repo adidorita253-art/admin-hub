@@ -60,7 +60,7 @@ import { exportLogbookPDF, exportLogbookExcel } from "@/lib/logbooks-export";
 
 export const Route = createFileRoute("/logbooks/")({
   head: () => ({ meta: [{ title: "Logbooks — Attachment Admin" }] }),
-  component: LogbooksPage,
+  component: LogbooksIndexPage,
 });
 
 const STATUSES: LogbookStatus[] = [
