@@ -95,21 +95,22 @@ let state: SettingsState = {
   departments: DEFAULT_DEPTS,
   letterTemplate: {
     institutionHeader:
-      "MERU UNIVERSITY OF SCIENCE AND TECHNOLOGY\nP.O. Box 972-60200, Meru, Kenya\nTel: +254 700 000 000 · Email: registrar@must.ac.ke",
-    body: `Dear {{COMPANY_NAME}},
+      "HO TECHNICAL UNIVERSITY\nCareer Placement and Counselling\nP.O. Box HP 217, Ho - Ghana\nTel: +233-3620-27803/26456 · Mobile: 024 4979211\nE-mail: industrialliaison@htu.edu.gh · Website: www.htu.edu.gh",
+    salutation: "Dear Sir/Madam,",
+    subject: "INDUSTRIAL ATTACHMENT FOR HND STUDENTS",
+    body: `We wish to introduce {{STUDENT_NAME}}, a level {{LEVEL}} {{PROGRAMME_TYPE}} {{PROGRAMME}} student (ID No. {{STUDENT_ID}}), to you for Industrial Attachment in your organization. Industrial Attachment is mandatory for all students to enable them get hands-on experience in their area of study.
 
-This letter introduces {{STUDENT_NAME}} (Reg. No: {{STUDENT_REG}}), a {{YEAR_OF_STUDY}} student in the Department of {{DEPARTMENT}} at our institution. The student is required to undertake an Industrial Attachment from {{START_DATE}} to {{END_DATE}}.
+The Industrial Attachment is expected to commence from {{START_DATE}} and end on {{END_DATE}}. It would be appreciated if {{STUDENT_NAME}} is given the opportunity to work in various sections of the organization to gain the required experience.
 
-We kindly request you to consider {{STUDENT_NAME}} for placement at {{COMPANY_NAME}}. The student will be supervised by {{ACADEMIC_SUPERVISOR}} from our institution.
+We hope this opportunity would predispose our student to life in the industry or organization.
 
-To confirm acceptance, please scan the QR code on this letter or visit the approval link sent to your official email.
-
-Yours faithfully,
-
-{{SIGNATORY}}
-{{SIGNATORY_TITLE}}`,
-    signatory: "Dr. Jane Mwangi",
-    signatoryTitle: "Director, Industrial Attachment",
+For further inquiries, contact us on {{CONTACT_PHONE}} or email us through: {{CONTACT_EMAIL}}.`,
+    closing: "Thank you.\n\nYours faithfully,",
+    ccLine: "Vice Chancellor, Pro-Vice Chancellor, Registrar",
+    signatory: "JOHNSON ABOAGYE",
+    signatoryTitle: "(Ag. Director, Career Placement & Counselling)",
+    effectiveDate: "2025-01-01",
+    version: "v1",
   },
   history: [
     {
