@@ -754,81 +754,94 @@ function LetterTemplateTab() {
 
 function LetterPreviewDraft({ tpl }: { tpl: LetterTemplate }) {
   const [headerLine1, ...headerRest] = tpl.institutionHeader.split("\n");
-  const contactBlock = headerRest.slice(1).join("\n"); // skip department line
   const departmentLine = headerRest[0] ?? "";
+  const contactBlock = headerRest.slice(1).join("\n");
   return (
-    <div className="rounded-md border bg-white p-8 text-[13px] text-slate-900 shadow-sm">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-6 pb-4">
-        <div className="flex items-start gap-3">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-blue-900 bg-blue-950 text-[9px] font-bold text-yellow-400">
-            HTU
+    <div className="max-h-[900px] overflow-y-auto rounded-md border bg-slate-100 p-4">
+      <div className="mx-auto max-w-[720px] rounded-md border bg-white p-10 font-serif text-[13px] leading-relaxed text-slate-900 shadow-sm">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-6 pb-3">
+          <div className="flex items-start gap-3">
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-blue-900 bg-blue-950 text-[9px] font-bold text-yellow-400">
+              HTU
+            </div>
+            <div className="text-lg font-bold leading-tight text-blue-950">
+              {headerLine1}
+            </div>
           </div>
-          <div className="font-bold leading-tight text-blue-950">
-            {headerLine1.split(" ").map((w, i) => (
-              <div key={i}>{w}</div>
-            ))}
+          <div className="whitespace-pre-line text-right text-[11px] leading-snug text-slate-700">
+            <div className="font-semibold text-slate-900">{departmentLine}</div>
+            {contactBlock}
           </div>
         </div>
-        <div className="whitespace-pre-line text-right text-[11px] leading-snug text-slate-700">
-          <div className="font-semibold text-slate-900">{departmentLine}</div>
-          {contactBlock}
+        <div className="border-t border-slate-400" />
+
+        {/* Ref & Date */}
+        <div className="mt-4 text-right text-[12px]">
+          <div>
+            <span className="font-semibold">Ref:</span> {SAMPLE["{{REFERENCE_NO}}"]}
+          </div>
+          <div>
+            <span className="font-semibold">Date:</span> {SAMPLE["{{DATE}}"]}
+          </div>
         </div>
-      </div>
-      <div className="border-t border-slate-300" />
 
-      {/* Recipient */}
-      <div className="mt-6 whitespace-pre-line text-[13px]">
-        {`Registrar,\n{{COMPANY_NAME}}\n{{COMPANY_LOCATION}}`}
-      </div>
-
-      {/* Student ref */}
-      <div className="mt-4 text-[13px]">
-        <div>
-          <span className="font-semibold">NAME:</span> {"{{STUDENT_NAME}}"}
+        {/* Recipient */}
+        <div className="mt-6 whitespace-pre-line">
+          {`Registrar,\n${SAMPLE["{{COMPANY_NAME}}"]}\n${SAMPLE["{{COMPANY_LOCATION}}"]}`}
         </div>
-        <div>
-          <span className="font-semibold">Telephone:</span> {"{{TELEPHONE}}"}
+
+        {/* Student ref */}
+        <div className="mt-4">
+          <div>
+            <span className="font-semibold">NAME:</span> {SAMPLE["{{STUDENT_NAME}}"]}
+          </div>
+          <div>
+            <span className="font-semibold">Telephone:</span> {SAMPLE["{{TELEPHONE}}"]}
+          </div>
         </div>
-      </div>
 
-      {/* Salutation */}
-      <div className="mt-4">{tpl.salutation}</div>
+        {/* Salutation */}
+        <div className="mt-4">{fillTokens(tpl.salutation)}</div>
 
-      {/* Subject */}
-      <div className="mt-3 text-center font-semibold underline">
-        {fillTokens(tpl.subject)}
-      </div>
-
-      {/* Body */}
-      <div className="mt-4 whitespace-pre-line leading-relaxed">
-        {fillTokens(tpl.body)}
-      </div>
-
-      {/* Closing */}
-      <div className="mt-4 whitespace-pre-line">{tpl.closing}</div>
-
-      {/* Signatory */}
-      <div className="mt-6">
-        <div className="font-semibold">{tpl.signatory}</div>
-        <div className="italic text-slate-700">{tpl.signatoryTitle}</div>
-      </div>
-
-      {/* CC */}
-      <div className="mt-4 text-[12px]">
-        <span className="font-semibold">Cc:</span> {tpl.ccLine}
-      </div>
-
-      {/* QR footer */}
-      <div className="mt-6 flex items-center gap-3 border-t border-slate-200 pt-4">
-        <div className="flex size-14 shrink-0 items-center justify-center rounded border border-dashed border-slate-400 bg-slate-50">
-          <QrCode className="size-8 text-slate-500" />
+        {/* Subject */}
+        <div className="mt-3 text-center font-bold underline">
+          {fillTokens(tpl.subject)}
         </div>
-        <div className="text-[11px] leading-snug text-slate-600">
-          To approve or reject this attachment request,
-          <br />
-          scan the QR code or visit the link:{" "}
-          <span className="font-mono text-blue-700">{"{{APPROVAL_LINK}}"}</span>
+
+        {/* Body */}
+        <div className="mt-4 whitespace-pre-line">
+          {fillTokens(tpl.body)}
+        </div>
+
+        {/* Closing */}
+        <div className="mt-4 whitespace-pre-line">{fillTokens(tpl.closing)}</div>
+
+        {/* Signatory */}
+        <div className="mt-6">
+          <div className="font-bold">{tpl.signatory}</div>
+          <div className="italic text-slate-700">{tpl.signatoryTitle}</div>
+        </div>
+
+        {/* CC */}
+        <div className="mt-4 text-[12px]">
+          <span className="font-semibold">Cc:</span> {fillTokens(tpl.ccLine)}
+        </div>
+
+        {/* QR footer */}
+        <div className="mt-6 flex items-center gap-3 rounded border border-slate-300 p-3">
+          <div className="flex size-16 shrink-0 items-center justify-center rounded border border-dashed border-slate-400 bg-slate-50">
+            <QrCode className="size-10 text-slate-500" />
+          </div>
+          <div className="text-[11px] leading-snug text-slate-600">
+            To approve or reject this attachment request, scan the QR code or visit the link:{" "}
+            <span className="font-mono text-blue-700">{SAMPLE["{{APPROVAL_LINK}}"]}</span>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-6 text-center text-[10px] text-slate-500">
+          Generated by Attachment Admin System
         </div>
       </div>
     </div>
