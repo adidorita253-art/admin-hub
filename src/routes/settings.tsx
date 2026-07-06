@@ -505,101 +505,212 @@ function DepartmentDialog({
 /* -------------------- Letter Template -------------------- */
 
 const TOKENS = [
-  "{{REFERENCE_NO}}",
-  "{{DATE}}",
   "{{STUDENT_NAME}}",
-  "{{STUDENT_REG}}",
-  "{{DEPARTMENT}}",
-  "{{YEAR_OF_STUDY}}",
+  "{{STUDENT_ID}}",
+  "{{PROGRAMME}}",
+  "{{PROGRAMME_TYPE}}",
+  "{{LEVEL}}",
+  "{{TELEPHONE}}",
   "{{COMPANY_NAME}}",
-  "{{ACADEMIC_SUPERVISOR}}",
+  "{{COMPANY_LOCATION}}",
   "{{START_DATE}}",
   "{{END_DATE}}",
-  "{{SIGNATORY}}",
-  "{{SIGNATORY_TITLE}}",
+  "{{REFERENCE_NO}}",
+  "{{APPROVAL_LINK}}",
+  "{{CONTACT_PHONE}}",
+  "{{CONTACT_EMAIL}}",
 ];
 
 const SAMPLE: Record<string, string> = {
-  "{{REFERENCE_NO}}": "MUST/IA/2025/0142",
-  "{{DATE}}": new Date().toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }),
-  "{{STUDENT_NAME}}": "Jane Wanjiku",
-  "{{STUDENT_REG}}": "CS/2021/0142",
-  "{{DEPARTMENT}}": "Computer Science",
-  "{{YEAR_OF_STUDY}}": "3rd Year",
-  "{{COMPANY_NAME}}": "Safaricom PLC",
-  "{{ACADEMIC_SUPERVISOR}}": "Dr. Peter Otieno",
-  "{{START_DATE}}": "13 Jan 2025",
-  "{{END_DATE}}": "18 Apr 2025",
-  "{{SIGNATORY}}": "Dr. Jane Mwangi",
-  "{{SIGNATORY_TITLE}}": "Director, Industrial Attachment",
+  "{{STUDENT_NAME}}": "KWAME MENSAH",
+  "{{STUDENT_ID}}": "HTU/2024/00142",
+  "{{PROGRAMME}}": "Computer Science",
+  "{{PROGRAMME_TYPE}}": "HND",
+  "{{LEVEL}}": "200",
+  "{{TELEPHONE}}": "024 000 0000",
+  "{{COMPANY_NAME}}": "MTN Ghana",
+  "{{COMPANY_LOCATION}}": "Accra, Ghana",
+  "{{START_DATE}}": "23 May 2025",
+  "{{END_DATE}}": "18 July 2025",
+  "{{REFERENCE_NO}}": "HTU/CPC/2025/0142",
+  "{{APPROVAL_LINK}}": "https://approve.htu.edu.gh/a/0142",
+  "{{CONTACT_PHONE}}": "+233-3620-27803",
+  "{{CONTACT_EMAIL}}": "industrialliaison@htu.edu.gh",
 };
 
 function fillTokens(text: string) {
   return TOKENS.reduce((acc, t) => acc.split(t).join(SAMPLE[t] ?? t), text);
 }
 
+const DEFAULT_TEMPLATE: LetterTemplate = {
+  institutionHeader:
+    "HO TECHNICAL UNIVERSITY\nCareer Placement and Counselling\nP.O. Box HP 217, Ho - Ghana\nTel: +233-3620-27803/26456 · Mobile: 024 4979211\nE-mail: industrialliaison@htu.edu.gh · Website: www.htu.edu.gh",
+  salutation: "Dear Sir/Madam,",
+  subject: "INDUSTRIAL ATTACHMENT FOR HND STUDENTS",
+  body: `We wish to introduce {{STUDENT_NAME}}, a level {{LEVEL}} {{PROGRAMME_TYPE}} {{PROGRAMME}} student (ID No. {{STUDENT_ID}}), to you for Industrial Attachment in your organization. Industrial Attachment is mandatory for all students to enable them get hands-on experience in their area of study.
+
+The Industrial Attachment is expected to commence from {{START_DATE}} and end on {{END_DATE}}. It would be appreciated if {{STUDENT_NAME}} is given the opportunity to work in various sections of the organization to gain the required experience.
+
+We hope this opportunity would predispose our student to life in the industry or organization.
+
+For further inquiries, contact us on {{CONTACT_PHONE}} or email us through: {{CONTACT_EMAIL}}.`,
+  closing: "Thank you.\n\nYours faithfully,",
+  ccLine: "Vice Chancellor, Pro-Vice Chancellor, Registrar",
+  signatory: "JOHNSON ABOAGYE",
+  signatoryTitle: "(Ag. Director, Career Placement & Counselling)",
+  effectiveDate: "2025-01-01",
+  version: "v1",
+};
+
+function bumpVersion(v: string): string {
+  const m = v.match(/^v(\d+)$/i);
+  return m ? `v${parseInt(m[1], 10) + 1}` : "v1";
+}
+
 function LetterTemplateTab() {
   const { letterTemplate } = useSettings();
   const [tpl, setTpl] = useState<LetterTemplate>(letterTemplate);
-  const [activeField, setActiveField] = useState<"body" | "header">("body");
+  const [activeField, setActiveField] = useState<"body" | "subject" | "closing" | "cc">("body");
 
   function insertToken(token: string) {
-    if (activeField === "body") {
-      setTpl({ ...tpl, body: tpl.body + " " + token });
-    } else {
-      setTpl({ ...tpl, institutionHeader: tpl.institutionHeader + " " + token });
-    }
+    const map = {
+      body: () => setTpl({ ...tpl, body: tpl.body + " " + token }),
+      subject: () => setTpl({ ...tpl, subject: tpl.subject + " " + token }),
+      closing: () => setTpl({ ...tpl, closing: tpl.closing + " " + token }),
+      cc: () => setTpl({ ...tpl, ccLine: tpl.ccLine + " " + token }),
+    };
+    map[activeField]();
   }
 
-  function save() {
-    settingsStore.setLetterTemplate(tpl);
-    toast.success("Letter template saved");
+  function saveAsNewVersion() {
+    const next: LetterTemplate = {
+      ...tpl,
+      version: bumpVersion(tpl.version),
+      effectiveDate: tpl.effectiveDate || new Date().toISOString().slice(0, 10),
+    };
+    settingsStore.setLetterTemplate(next);
+    setTpl(next);
+    toast.success(`Letter template saved as ${next.version}`);
+  }
+
+  function resetToDefault() {
+    setTpl({ ...DEFAULT_TEMPLATE, version: tpl.version, effectiveDate: tpl.effectiveDate });
+    toast.success("Reset to default (unsaved)");
   }
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Card>
-        <CardHeader>
-          <CardTitle>Template Editor</CardTitle>
-          <CardDescription>
-            Edit the letter template. Click a token to insert it into the active field.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
+          <div className="space-y-1">
+            <CardTitle>Introduction Letter Template</CardTitle>
+            <CardDescription className="flex flex-wrap items-center gap-1.5">
+              <span>Current active version:</span>
+              <Badge variant="secondary" className="font-mono">
+                {letterTemplate.version}
+              </Badge>
+              <span>
+                · effective {letterTemplate.effectiveDate}. Saving creates a new version with the
+                effective date below.
+              </span>
+            </CardDescription>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <Button variant="outline" size="sm" onClick={resetToDefault}>
+              <History className="size-4" /> Reset to default
+            </Button>
+            <Button size="sm" onClick={saveAsNewVersion}>
+              <Save className="size-4" /> Save as new version
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <div className="flex flex-wrap gap-1.5">
-            {TOKENS.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => insertToken(t)}
-                className="rounded-md border bg-muted px-2 py-1 font-mono text-xs hover:bg-accent"
-              >
-                {t}
-              </button>
-            ))}
+          <div className="grid gap-3 rounded-md border bg-muted/40 p-3 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="effective-date">Effective Date</Label>
+              <Input
+                id="effective-date"
+                type="date"
+                value={tpl.effectiveDate}
+                onChange={(e) => setTpl({ ...tpl, effectiveDate: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="change-note">Change Note (optional)</Label>
+              <Input
+                id="change-note"
+                placeholder="e.g. Updated registrar signatory"
+                value={tpl.changeNote ?? ""}
+                onChange={(e) => setTpl({ ...tpl, changeNote: e.target.value })}
+              />
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label>Institution Header</Label>
-            <Textarea
-              rows={3}
-              value={tpl.institutionHeader}
-              onFocus={() => setActiveField("header")}
-              onChange={(e) => setTpl({ ...tpl, institutionHeader: e.target.value })}
-            />
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Recipient Salutation</Label>
+              <Input
+                value={tpl.salutation}
+                onChange={(e) => setTpl({ ...tpl, salutation: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Subject Line</Label>
+              <Input
+                value={tpl.subject}
+                onFocus={() => setActiveField("subject")}
+                onChange={(e) => setTpl({ ...tpl, subject: e.target.value })}
+              />
+            </div>
           </div>
+
           <div className="grid gap-2">
-            <Label>Body</Label>
+            <Label>Letter Body</Label>
             <Textarea
-              rows={14}
+              rows={10}
               value={tpl.body}
               onFocus={() => setActiveField("body")}
               onChange={(e) => setTpl({ ...tpl, body: e.target.value })}
             />
           </div>
+
+          <div className="grid gap-2">
+            <Label className="text-xs text-muted-foreground">Insert token:</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {TOKENS.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => insertToken(t)}
+                  className="rounded-full border bg-muted px-2.5 py-1 font-mono text-[11px] hover:bg-accent"
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Closing</Label>
+              <Textarea
+                rows={3}
+                value={tpl.closing}
+                onFocus={() => setActiveField("closing")}
+                onChange={(e) => setTpl({ ...tpl, closing: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>CC Line</Label>
+              <Textarea
+                rows={3}
+                value={tpl.ccLine}
+                onFocus={() => setActiveField("cc")}
+                onChange={(e) => setTpl({ ...tpl, ccLine: e.target.value })}
+              />
+            </div>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label>Signatory Name</Label>
@@ -616,45 +727,105 @@ function LetterTemplateTab() {
               />
             </div>
           </div>
-          <div>
-            <Button onClick={save}>
-              <Save className="size-4" /> Save Template
-            </Button>
-          </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Live Preview</CardTitle>
+          <CardTitle>Live Preview (draft)</CardTitle>
           <CardDescription>Sample values are filled in for preview.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border bg-white p-8 text-sm text-slate-900 shadow-sm">
-            <div className="whitespace-pre-line text-center font-semibold leading-snug">
-              {fillTokens(tpl.institutionHeader)}
-            </div>
-            <div className="mt-6 text-right font-mono text-xs leading-relaxed">
-              <div>Ref: {SAMPLE["{{REFERENCE_NO}}"]}</div>
-              <div>Date: {SAMPLE["{{DATE}}"]}</div>
-            </div>
-            <div className="mt-6 whitespace-pre-line leading-relaxed">
-              {fillTokens(tpl.body)}
-            </div>
-            <div className="mt-10 flex items-end justify-between">
-              <div className="flex size-20 items-center justify-center rounded border bg-slate-50 text-[10px] text-slate-500">
-                QR
-              </div>
-              <div className="text-right text-xs text-slate-500">
-                Generated by Attachment Admin
-              </div>
-            </div>
-          </div>
+          <LetterPreviewDraft tpl={tpl} />
         </CardContent>
       </Card>
     </div>
   );
 }
+
+function LetterPreviewDraft({ tpl }: { tpl: LetterTemplate }) {
+  const [headerLine1, ...headerRest] = tpl.institutionHeader.split("\n");
+  const contactBlock = headerRest.slice(1).join("\n"); // skip department line
+  const departmentLine = headerRest[0] ?? "";
+  return (
+    <div className="rounded-md border bg-white p-8 text-[13px] text-slate-900 shadow-sm">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-6 pb-4">
+        <div className="flex items-start gap-3">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-blue-900 bg-blue-950 text-[9px] font-bold text-yellow-400">
+            HTU
+          </div>
+          <div className="font-bold leading-tight text-blue-950">
+            {headerLine1.split(" ").map((w, i) => (
+              <div key={i}>{w}</div>
+            ))}
+          </div>
+        </div>
+        <div className="whitespace-pre-line text-right text-[11px] leading-snug text-slate-700">
+          <div className="font-semibold text-slate-900">{departmentLine}</div>
+          {contactBlock}
+        </div>
+      </div>
+      <div className="border-t border-slate-300" />
+
+      {/* Recipient */}
+      <div className="mt-6 whitespace-pre-line text-[13px]">
+        {`Registrar,\n{{COMPANY_NAME}}\n{{COMPANY_LOCATION}}`}
+      </div>
+
+      {/* Student ref */}
+      <div className="mt-4 text-[13px]">
+        <div>
+          <span className="font-semibold">NAME:</span> {"{{STUDENT_NAME}}"}
+        </div>
+        <div>
+          <span className="font-semibold">Telephone:</span> {"{{TELEPHONE}}"}
+        </div>
+      </div>
+
+      {/* Salutation */}
+      <div className="mt-4">{tpl.salutation}</div>
+
+      {/* Subject */}
+      <div className="mt-3 text-center font-semibold underline">
+        {fillTokens(tpl.subject)}
+      </div>
+
+      {/* Body */}
+      <div className="mt-4 whitespace-pre-line leading-relaxed">
+        {fillTokens(tpl.body)}
+      </div>
+
+      {/* Closing */}
+      <div className="mt-4 whitespace-pre-line">{tpl.closing}</div>
+
+      {/* Signatory */}
+      <div className="mt-6">
+        <div className="font-semibold">{tpl.signatory}</div>
+        <div className="italic text-slate-700">{tpl.signatoryTitle}</div>
+      </div>
+
+      {/* CC */}
+      <div className="mt-4 text-[12px]">
+        <span className="font-semibold">Cc:</span> {tpl.ccLine}
+      </div>
+
+      {/* QR footer */}
+      <div className="mt-6 flex items-center gap-3 border-t border-slate-200 pt-4">
+        <div className="flex size-14 shrink-0 items-center justify-center rounded border border-dashed border-slate-400 bg-slate-50">
+          <QrCode className="size-8 text-slate-500" />
+        </div>
+        <div className="text-[11px] leading-snug text-slate-600">
+          To approve or reject this attachment request,
+          <br />
+          scan the QR code or visit the link:{" "}
+          <span className="font-mono text-blue-700">{"{{APPROVAL_LINK}}"}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 /* -------------------- Version History -------------------- */
 
