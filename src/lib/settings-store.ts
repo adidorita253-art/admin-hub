@@ -19,9 +19,16 @@ export interface DepartmentRecord {
 
 export interface LetterTemplate {
   institutionHeader: string;
+  salutation: string;
+  subject: string;
   body: string;
+  closing: string;
+  ccLine: string;
   signatory: string;
   signatoryTitle: string;
+  effectiveDate: string;
+  version: string;
+  changeNote?: string;
 }
 
 export interface HistoryEvent {
