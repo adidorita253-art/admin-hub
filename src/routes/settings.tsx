@@ -527,19 +527,28 @@ const SAMPLE: Record<string, string> = {
   "{{PROGRAMME}}": "Computer Science",
   "{{PROGRAMME_TYPE}}": "HND",
   "{{LEVEL}}": "200",
-  "{{TELEPHONE}}": "024 000 0000",
+  "{{TELEPHONE}}": "024 123 4567",
   "{{COMPANY_NAME}}": "MTN Ghana",
   "{{COMPANY_LOCATION}}": "Accra, Ghana",
   "{{START_DATE}}": "23 May 2025",
   "{{END_DATE}}": "18 July 2025",
-  "{{REFERENCE_NO}}": "HTU/CPC/2025/0142",
-  "{{APPROVAL_LINK}}": "https://approve.htu.edu.gh/a/0142",
+  "{{REFERENCE_NO}}": "HTU/IA/2025/CS/0042",
+  "{{APPROVAL_LINK}}": "https://attach.htu.edu.gh/approve/abc123",
   "{{CONTACT_PHONE}}": "+233-3620-27803",
-  "{{CONTACT_EMAIL}}": "industrialliaison@htu.edu.gh",
+  "{{CONTACT_EMAIL}}": "industrialiaison@htu.edu.gh",
+  "{{DATE}}": "06 July 2026",
+  "{{ACADEMIC_SUPERVISOR}}": "Dr. Akosua Mensah",
+  "{{DEPARTMENT}}": "Computer Science",
+  "{{STUDENT_REG}}": "CS/2024/00142",
+  "{{YEAR_OF_STUDY}}": "2nd Year",
 };
 
 function fillTokens(text: string) {
-  return TOKENS.reduce((acc, t) => acc.split(t).join(SAMPLE[t] ?? t), text);
+  let out = text;
+  for (const [tok, val] of Object.entries(SAMPLE)) {
+    out = out.split(tok).join(val);
+  }
+  return out.replace(/\{\{[A-Z0-9_]+\}\}/g, "[SAMPLE VALUE]");
 }
 
 const DEFAULT_TEMPLATE: LetterTemplate = {
