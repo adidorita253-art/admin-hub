@@ -409,6 +409,24 @@ function StudentsPage() {
           setAssignFor(null);
         }}
       />
+      <BulkAssignSupervisorDialog
+        open={bulkAssignOpen}
+        onOpenChange={setBulkAssignOpen}
+        students={data.filter((s) => selected.has(s.id))}
+        onAssign={(supId) => {
+          setData((prev) =>
+            prev.map((x) =>
+              selected.has(x.id) ? { ...x, academicSupervisorId: supId } : x,
+            ),
+          );
+          const sup = findAcademicSupervisor(supId);
+          toast.success(
+            `${selected.size} student${selected.size === 1 ? "" : "s"} assigned to ${sup?.title} ${sup?.lastName} successfully`,
+          );
+          setSelected(new Set());
+          setBulkAssignOpen(false);
+        }}
+      />
     </div>
   );
 }
