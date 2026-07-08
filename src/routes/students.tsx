@@ -945,3 +945,124 @@ function AssignSupervisorDialog({
     </Dialog>
   );
 }
+
+function BulkAssignSupervisorDialog({
+  open,
+  onOpenChange,
+  students,
+  onAssign,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  students: Student[];
+  onAssign: (supId: string) => void;
+}) {
+  const [sup, setSup] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const list = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return academicSupervisors
+      .filter((a) => a.status === "active")
+      .filter((a) => {
+        if (!q) return true;
+        return (
+          a.firstName.toLowerCase().includes(q) ||
+          a.lastName.toLowerCase().includes(q) ||
+          a.department.toLowerCase().includes(q) ||
+          a.staffNumber.toLowerCase().includes(q)
+        );
+      });
+  }, [search]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Assign Academic Supervisor</DialogTitle>
+          <DialogDescription>
+            Assigning supervisor to {students.length} selected student
+            {students.length === 1 ? "" : "s"}:
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="max-h-40 overflow-y-auto rounded-md border bg-muted/30 p-3 text-sm">
+          <ul className="space-y-1">
+            {students.slice(0, 20).map((s) => (
+              <li key={s.id} className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                <span className="font-medium">
+                  {s.firstName} {s.lastName}
+                </span>
+                <span className="text-muted-foreground">({s.department})</span>
+              </li>
+            ))}
+            {students.length > 20 && (
+              <li className="pl-3.5 text-xs text-muted-foreground">
+                + {students.length - 20} more
+              </li>
+            )}
+          </ul>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs">Select Supervisor</Label>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search supervisors by name, dept…"
+              className="pl-8"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="max-h-56 overflow-y-auto rounded-md border">
+            {list.map((a) => {
+              const active = sup === a.id;
+              const full = a.studentsAssigned >= a.maxLoad;
+              return (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => setSup(a.id)}
+                  className={`flex w-full items-center justify-between gap-3 border-b px-3 py-2 text-left text-sm last:border-b-0 hover:bg-muted/60 ${
+                    active ? "bg-primary/10" : ""
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <div className="truncate font-medium">
+                      {a.title} {a.firstName} {a.lastName}
+                    </div>
+                    <div className="truncate text-xs text-muted-foreground">
+                      {a.department} • {a.staffNumber}
+                    </div>
+                  </div>
+                  <div
+                    className={`whitespace-nowrap text-xs ${
+                      full ? "text-destructive" : "text-muted-foreground"
+                    }`}
+                  >
+                    {a.studentsAssigned}/{a.maxLoad}
+                  </div>
+                </button>
+              );
+            })}
+            {list.length === 0 && (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                No supervisors match.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button disabled={!sup || students.length === 0} onClick={() => onAssign(sup)}>
+            Assign All ({students.length})
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
