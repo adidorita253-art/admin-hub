@@ -227,21 +227,24 @@ function StudentsPage() {
           </div>
 
           {selected.size > 0 && (
-            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
-              <span className="font-medium">{selected.size} selected</span>
+            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-md border bg-primary/5 px-3 py-2 text-sm">
+              <span className="font-medium">{selected.size} student{selected.size === 1 ? "" : "s"} selected</span>
               <Separator orientation="vertical" className="h-4" />
-              <Button size="sm" variant="ghost" onClick={() => toast.info("Bulk assign supervisor")}>
-                <UserCog /> Assign supervisor
+              <Button size="sm" variant="default" onClick={() => setBulkAssignOpen(true)}>
+                <UserCog /> Assign Supervisor
               </Button>
-              <Button size="sm" variant="ghost" onClick={bulkDeactivate}>
+              <Button size="sm" variant="outline" onClick={bulkDeactivate}>
                 <UserMinus /> Deactivate
               </Button>
               <Button
                 size="sm"
-                variant="ghost"
-                onClick={() => toast.success("Exported selection")}
+                variant="outline"
+                onClick={() => toast.success(`Exported ${selected.size} student(s)`)}
               >
                 <Download /> Export
+              </Button>
+              <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSelected(new Set())}>
+                Clear
               </Button>
             </div>
           )}
