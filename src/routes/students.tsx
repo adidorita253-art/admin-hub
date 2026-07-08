@@ -89,6 +89,7 @@ function StudentsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [assignFor, setAssignFor] = useState<Student | null>(null);
+  const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
