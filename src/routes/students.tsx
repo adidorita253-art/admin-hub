@@ -89,6 +89,7 @@ function StudentsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [assignFor, setAssignFor] = useState<Student | null>(null);
+  const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -226,21 +227,24 @@ function StudentsPage() {
           </div>
 
           {selected.size > 0 && (
-            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
-              <span className="font-medium">{selected.size} selected</span>
+            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-md border bg-primary/5 px-3 py-2 text-sm">
+              <span className="font-medium">{selected.size} student{selected.size === 1 ? "" : "s"} selected</span>
               <Separator orientation="vertical" className="h-4" />
-              <Button size="sm" variant="ghost" onClick={() => toast.info("Bulk assign supervisor")}>
-                <UserCog /> Assign supervisor
+              <Button size="sm" variant="default" onClick={() => setBulkAssignOpen(true)}>
+                <UserCog /> Assign Supervisor
               </Button>
-              <Button size="sm" variant="ghost" onClick={bulkDeactivate}>
+              <Button size="sm" variant="outline" onClick={bulkDeactivate}>
                 <UserMinus /> Deactivate
               </Button>
               <Button
                 size="sm"
-                variant="ghost"
-                onClick={() => toast.success("Exported selection")}
+                variant="outline"
+                onClick={() => toast.success(`Exported ${selected.size} student(s)`)}
               >
                 <Download /> Export
+              </Button>
+              <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSelected(new Set())}>
+                Clear
               </Button>
             </div>
           )}
@@ -403,6 +407,24 @@ function StudentsPage() {
           const sup = findAcademicSupervisor(supId);
           toast.success(`Assigned to ${sup?.title} ${sup?.lastName}`);
           setAssignFor(null);
+        }}
+      />
+      <BulkAssignSupervisorDialog
+        open={bulkAssignOpen}
+        onOpenChange={setBulkAssignOpen}
+        students={data.filter((s) => selected.has(s.id))}
+        onAssign={(supId) => {
+          setData((prev) =>
+            prev.map((x) =>
+              selected.has(x.id) ? { ...x, academicSupervisorId: supId } : x,
+            ),
+          );
+          const sup = findAcademicSupervisor(supId);
+          toast.success(
+            `${selected.size} student${selected.size === 1 ? "" : "s"} assigned to ${sup?.title} ${sup?.lastName} successfully`,
+          );
+          setSelected(new Set());
+          setBulkAssignOpen(false);
         }}
       />
     </div>
@@ -917,6 +939,127 @@ function AssignSupervisorDialog({
           </Button>
           <Button disabled={!sup} onClick={() => onAssign(sup)}>
             Assign
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function BulkAssignSupervisorDialog({
+  open,
+  onOpenChange,
+  students,
+  onAssign,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  students: Student[];
+  onAssign: (supId: string) => void;
+}) {
+  const [sup, setSup] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const list = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return academicSupervisors
+      .filter((a) => a.status === "active")
+      .filter((a) => {
+        if (!q) return true;
+        return (
+          a.firstName.toLowerCase().includes(q) ||
+          a.lastName.toLowerCase().includes(q) ||
+          a.department.toLowerCase().includes(q) ||
+          a.staffNumber.toLowerCase().includes(q)
+        );
+      });
+  }, [search]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Assign Academic Supervisor</DialogTitle>
+          <DialogDescription>
+            Assigning supervisor to {students.length} selected student
+            {students.length === 1 ? "" : "s"}:
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="max-h-40 overflow-y-auto rounded-md border bg-muted/30 p-3 text-sm">
+          <ul className="space-y-1">
+            {students.slice(0, 20).map((s) => (
+              <li key={s.id} className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                <span className="font-medium">
+                  {s.firstName} {s.lastName}
+                </span>
+                <span className="text-muted-foreground">({s.department})</span>
+              </li>
+            ))}
+            {students.length > 20 && (
+              <li className="pl-3.5 text-xs text-muted-foreground">
+                + {students.length - 20} more
+              </li>
+            )}
+          </ul>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs">Select Supervisor</Label>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search supervisors by name, dept…"
+              className="pl-8"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="max-h-56 overflow-y-auto rounded-md border">
+            {list.map((a) => {
+              const active = sup === a.id;
+              const full = a.studentsAssigned >= a.maxLoad;
+              return (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => setSup(a.id)}
+                  className={`flex w-full items-center justify-between gap-3 border-b px-3 py-2 text-left text-sm last:border-b-0 hover:bg-muted/60 ${
+                    active ? "bg-primary/10" : ""
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <div className="truncate font-medium">
+                      {a.title} {a.firstName} {a.lastName}
+                    </div>
+                    <div className="truncate text-xs text-muted-foreground">
+                      {a.department} • {a.staffNumber}
+                    </div>
+                  </div>
+                  <div
+                    className={`whitespace-nowrap text-xs ${
+                      full ? "text-destructive" : "text-muted-foreground"
+                    }`}
+                  >
+                    {a.studentsAssigned}/{a.maxLoad}
+                  </div>
+                </button>
+              );
+            })}
+            {list.length === 0 && (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                No supervisors match.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button disabled={!sup || students.length === 0} onClick={() => onAssign(sup)}>
+            Assign All ({students.length})
           </Button>
         </DialogFooter>
       </DialogContent>
