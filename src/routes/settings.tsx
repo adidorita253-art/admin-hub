@@ -1,17 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   Calendar as CalendarIcon,
-  CheckCircle2,
   History,
-  MoreHorizontal,
   Palette,
-  Pencil,
-  Plus,
   QrCode,
   ShieldCheck,
   FileText,
   Building2,
+  BookOpen,
+  Landmark,
   Save,
 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
@@ -38,29 +36,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   settingsStore,
   useSettings,
-  type DepartmentRecord,
   type Semester,
   type LetterTemplate,
 } from "@/lib/settings-store";
-import { cn } from "@/lib/utils";
+import { FacultiesTab } from "@/components/settings/faculties-tab";
+import { DepartmentsTab } from "@/components/settings/departments-tab";
+import { ProgrammesTab } from "@/components/settings/programmes-tab";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "System Settings — Attachment Admin" }] }),
@@ -82,8 +67,14 @@ function SettingsPage() {
           <TabsTrigger value="approvals">
             <ShieldCheck className="size-4" /> Approvals
           </TabsTrigger>
+          <TabsTrigger value="faculties">
+            <Landmark className="size-4" /> Faculties
+          </TabsTrigger>
           <TabsTrigger value="departments">
             <Building2 className="size-4" /> Departments
+          </TabsTrigger>
+          <TabsTrigger value="programmes">
+            <BookOpen className="size-4" /> Programmes
           </TabsTrigger>
           <TabsTrigger value="letter">
             <FileText className="size-4" /> Letter Template
@@ -102,8 +93,14 @@ function SettingsPage() {
         <TabsContent value="approvals" className="mt-4">
           <ApprovalsTab />
         </TabsContent>
+        <TabsContent value="faculties" className="mt-4">
+          <FacultiesTab />
+        </TabsContent>
         <TabsContent value="departments" className="mt-4">
           <DepartmentsTab />
+        </TabsContent>
+        <TabsContent value="programmes" className="mt-4">
+          <ProgrammesTab />
         </TabsContent>
         <TabsContent value="letter" className="mt-4">
           <LetterTemplateTab />
@@ -118,6 +115,7 @@ function SettingsPage() {
     </div>
   );
 }
+
 
 /* -------------------- Attachment Period -------------------- */
 
