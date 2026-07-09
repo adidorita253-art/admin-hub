@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   UserCheck,
   Plus,
@@ -57,13 +57,17 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import {
-  DEPARTMENTS,
   academicSupervisors as seed,
   students,
+  findFacultyById,
   type AcademicSupervisor,
 } from "@/lib/mock-data";
 import { StatusPill, AttachmentPill } from "@/components/status-pill";
-import { useActiveDepartments } from "@/lib/settings-store";
+import {
+  useActiveDepartments,
+  useActiveFaculties,
+  useSettings,
+} from "@/lib/settings-store";
 
 export const Route = createFileRoute("/academic-supervisors")({
   head: () => ({ meta: [{ title: "Academic Supervisors — Attachment Admin" }] }),
@@ -71,18 +75,26 @@ export const Route = createFileRoute("/academic-supervisors")({
 });
 
 function AcademicSupervisorsPage() {
-  const activeDepartments = useActiveDepartments();
+  const faculties = useActiveFaculties();
   const [data, setData] = useState<AcademicSupervisor[]>(seed);
   const [query, setQuery] = useState("");
-  const [dept, setDept] = useState("all");
+  const [facultyId, setFacultyId] = useState("all");
+  const [deptId, setDeptId] = useState("all");
   const [status, setStatus] = useState("all");
   const [viewing, setViewing] = useState<AcademicSupervisor | null>(null);
+  const [editing, setEditing] = useState<AcademicSupervisor | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+
+  const cascadeDepartments = useActiveDepartments(facultyId);
+  useEffect(() => {
+    if (deptId !== "all" && !cascadeDepartments.find((d) => d.id === deptId)) setDeptId("all");
+  }, [cascadeDepartments, deptId]);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
     return data.filter((s) => {
-      if (dept !== "all" && s.department !== dept) return false;
+      if (facultyId !== "all" && s.facultyId !== facultyId) return false;
+      if (deptId !== "all" && s.departmentId !== deptId) return false;
       if (status !== "all" && s.status !== status) return false;
       if (!q) return true;
       return (
@@ -92,7 +104,7 @@ function AcademicSupervisorsPage() {
         s.staffNumber.toLowerCase().includes(q)
       );
     });
-  }, [data, query, dept, status]);
+  }, [data, query, facultyId, deptId, status]);
 
   const stats = useMemo(() => {
     const totalStudents = data.reduce((a, s) => a + s.studentsAssigned, 0);
@@ -116,18 +128,8 @@ function AcademicSupervisorsPage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Mini icon={UserCheck} label="Supervisors" value={stats.total} />
         <Mini icon={Users} label="Students Assigned" value={stats.totalStudents} />
-        <Mini
-          icon={Clock}
-          label="Reviews Pending"
-          value={stats.pending}
-          tone="amber"
-        />
-        <Mini
-          icon={GraduationCap}
-          label="At Max Load"
-          value={stats.overloaded}
-          tone="destructive"
-        />
+        <Mini icon={Clock} label="Reviews Pending" value={stats.pending} tone="amber" />
+        <Mini icon={GraduationCap} label="At Max Load" value={stats.overloaded} tone="destructive" />
       </div>
 
       <Card>
@@ -141,25 +143,24 @@ function AcademicSupervisorsPage() {
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
-          <Select value={dept} onValueChange={setDept}>
-            <SelectTrigger className="lg:w-56">
-              <SelectValue placeholder="Department" />
-            </SelectTrigger>
+          <Select value={facultyId} onValueChange={(v) => { setFacultyId(v); setDeptId("all"); }}>
+            <SelectTrigger className="lg:w-56"><SelectValue placeholder="All Faculties" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All departments</SelectItem>
-              {activeDepartments.map((d) => (
-                <SelectItem key={d.id} value={d.name}>
-                  {d.name}
-                </SelectItem>
-              ))}
+              <SelectItem value="all">All Faculties</SelectItem>
+              {faculties.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={deptId} onValueChange={setDeptId}>
+            <SelectTrigger className="lg:w-56"><SelectValue placeholder="All Departments" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Departments</SelectItem>
+              {cascadeDepartments.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="lg:w-36">
-              <SelectValue placeholder="Account" />
-            </SelectTrigger>
+            <SelectTrigger className="lg:w-36"><SelectValue placeholder="All Statuses" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
             </SelectContent>
@@ -173,10 +174,10 @@ function AcademicSupervisorsPage() {
             <TableRow>
               <TableHead>Supervisor</TableHead>
               <TableHead>Staff No.</TableHead>
+              <TableHead>Faculty</TableHead>
               <TableHead>Department</TableHead>
-              <TableHead>Workload</TableHead>
+              <TableHead>Students Assigned</TableHead>
               <TableHead>Reviews Pending</TableHead>
-              <TableHead>Avg Review</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-10" />
             </TableRow>
@@ -184,6 +185,7 @@ function AcademicSupervisorsPage() {
           <TableBody>
             {filtered.map((s) => {
               const pct = Math.min(100, (s.studentsAssigned / s.maxLoad) * 100);
+              const fac = findFacultyById(s.facultyId);
               return (
                 <TableRow key={s.id}>
                   <TableCell>
@@ -198,13 +200,12 @@ function AcademicSupervisorsPage() {
                         <div className="font-medium">
                           {s.title} {s.firstName} {s.lastName}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {s.email}
-                        </div>
+                        <div className="text-xs text-muted-foreground">{s.email}</div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="font-mono text-xs">{s.staffNumber}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{fac?.name ?? "—"}</TableCell>
                   <TableCell className="text-sm">{s.department}</TableCell>
                   <TableCell className="w-48">
                     <div className="flex items-center gap-2">
@@ -223,10 +224,7 @@ function AcademicSupervisorsPage() {
                       <span className="text-xs text-muted-foreground">0</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm">{s.avgReviewHours}h</TableCell>
-                  <TableCell>
-                    <StatusPill status={s.status} />
-                  </TableCell>
+                  <TableCell><StatusPill status={s.status} /></TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -239,7 +237,7 @@ function AcademicSupervisorsPage() {
                         <DropdownMenuItem onClick={() => setViewing(s)}>
                           <Eye /> View profile
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toast.info("Edit form")}>
+                        <DropdownMenuItem onClick={() => setEditing(s)}>
                           <Pencil /> Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => toast.success("Password reset email sent")}>
@@ -250,9 +248,7 @@ function AcademicSupervisorsPage() {
                           className="text-destructive focus:text-destructive"
                           onClick={() => {
                             setData((prev) =>
-                              prev.map((x) =>
-                                x.id === s.id ? { ...x, status: "inactive" } : x,
-                              ),
+                              prev.map((x) => (x.id === s.id ? { ...x, status: "inactive" } : x)),
                             );
                             toast.success("Supervisor deactivated");
                           }}
@@ -276,16 +272,23 @@ function AcademicSupervisorsPage() {
         </Table>
       </Card>
 
-      <SupervisorProfileDialog
-        supervisor={viewing}
-        onClose={() => setViewing(null)}
-      />
-      <AddDialog
+      <SupervisorProfileDialog supervisor={viewing} onClose={() => setViewing(null)} />
+      <SupervisorFormDialog
         open={addOpen}
         onOpenChange={setAddOpen}
-        onCreated={(s) => {
+        onSave={(s) => {
           setData((prev) => [s, ...prev]);
           toast.success("Supervisor created — welcome email sent");
+        }}
+      />
+      <SupervisorFormDialog
+        open={!!editing}
+        onOpenChange={(o) => !o && setEditing(null)}
+        editing={editing ?? undefined}
+        onSave={(s) => {
+          setData((prev) => prev.map((x) => (x.id === s.id ? s : x)));
+          setEditing(null);
+          toast.success("Supervisor updated");
         }}
       />
     </div>
@@ -316,9 +319,7 @@ function Mini({
           <Icon className="h-5 w-5" />
         </div>
         <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            {label}
-          </p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
           <p className="text-xl font-bold">{value}</p>
         </div>
       </CardContent>
@@ -334,9 +335,8 @@ function SupervisorProfileDialog({
   onClose: () => void;
 }) {
   if (!supervisor) return null;
-  const myStudents = students.filter(
-    (s) => s.academicSupervisorId === supervisor.id,
-  );
+  const myStudents = students.filter((s) => s.academicSupervisorId === supervisor.id);
+  const fac = findFacultyById(supervisor.facultyId);
   return (
     <Dialog open={!!supervisor} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl">
@@ -354,7 +354,7 @@ function SupervisorProfileDialog({
                 {supervisor.title} {supervisor.firstName} {supervisor.lastName}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {supervisor.department} • {supervisor.officeRoom}
+                {fac?.name ?? "—"} • {supervisor.department} • {supervisor.officeRoom}
               </p>
               <div className="mt-1">
                 <StatusPill status={supervisor.status} />
@@ -375,26 +375,10 @@ function SupervisorProfileDialog({
             <div className="grid gap-3 sm:grid-cols-2">
               <Stat icon={Mail} label="Email" value={supervisor.email} />
               <Stat icon={Phone} label="Phone" value={supervisor.phone} />
-              <Stat
-                icon={Users}
-                label="Workload"
-                value={`${supervisor.studentsAssigned} of ${supervisor.maxLoad} students`}
-              />
-              <Stat
-                icon={Clock}
-                label="Average Review Time"
-                value={`${supervisor.avgReviewHours} hours`}
-              />
-              <Stat
-                icon={Clock}
-                label="Reviews Pending"
-                value={String(supervisor.reviewsPending)}
-              />
-              <Stat
-                icon={Building2}
-                label="Joined"
-                value={new Date(supervisor.createdAt).toLocaleDateString()}
-              />
+              <Stat icon={Users} label="Workload" value={`${supervisor.studentsAssigned} of ${supervisor.maxLoad} students`} />
+              <Stat icon={Clock} label="Average Review Time" value={`${supervisor.avgReviewHours} hours`} />
+              <Stat icon={Clock} label="Reviews Pending" value={String(supervisor.reviewsPending)} />
+              <Stat icon={Building2} label="Joined" value={new Date(supervisor.createdAt).toLocaleDateString()} />
             </div>
           </TabsContent>
 
@@ -415,18 +399,10 @@ function SupervisorProfileDialog({
                       <TableCell className="font-medium">
                         {st.firstName} {st.lastName}
                       </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {st.regNumber}
-                      </TableCell>
+                      <TableCell className="font-mono text-xs">{st.regNumber}</TableCell>
+                      <TableCell><AttachmentPill status={st.attachmentStatus} /></TableCell>
                       <TableCell>
-                        <AttachmentPill status={st.attachmentStatus} />
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => toast.info("Reassignment flow")}
-                        >
+                        <Button size="sm" variant="ghost" onClick={() => toast.info("Reassignment flow")}>
                           Reassign
                         </Button>
                       </TableCell>
@@ -462,24 +438,25 @@ function Stat({
     <div className="flex items-start gap-3 rounded-md border p-3">
       <Icon className="mt-0.5 h-4 w-4 text-muted-foreground" />
       <div className="min-w-0">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
         <p className="truncate text-sm font-medium">{value}</p>
       </div>
     </div>
   );
 }
 
-function AddDialog({
+function SupervisorFormDialog({
   open,
   onOpenChange,
-  onCreated,
+  editing,
+  onSave,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
-  onCreated: (s: AcademicSupervisor) => void;
+  editing?: AcademicSupervisor;
+  onSave: (s: AcademicSupervisor) => void;
 }) {
+  const { faculties, departments } = useSettings();
   const [form, setForm] = useState({
     title: "Dr." as AcademicSupervisor["title"],
     firstName: "",
@@ -487,117 +464,157 @@ function AddDialog({
     email: "",
     phone: "",
     staffNumber: "",
-    department: DEPARTMENTS[0] as string,
+    facultyId: "",
+    departmentId: "",
     officeRoom: "",
     maxLoad: "15",
   });
+
+  useEffect(() => {
+    if (open) {
+      if (editing) {
+        setForm({
+          title: editing.title,
+          firstName: editing.firstName,
+          lastName: editing.lastName,
+          email: editing.email,
+          phone: editing.phone,
+          staffNumber: editing.staffNumber,
+          facultyId: editing.facultyId,
+          departmentId: editing.departmentId,
+          officeRoom: editing.officeRoom,
+          maxLoad: String(editing.maxLoad),
+        });
+      } else {
+        setForm({
+          title: "Dr.", firstName: "", lastName: "", email: "", phone: "",
+          staffNumber: "", facultyId: "", departmentId: "", officeRoom: "", maxLoad: "15",
+        });
+      }
+    }
+  }, [open, editing]);
+
+  const facultyDepts = departments.filter(
+    (d) => d.facultyId === form.facultyId && (d.status === "active" || d.id === editing?.departmentId),
+  );
+
   const submit = () => {
     if (!form.firstName || !form.lastName || !form.email || !form.staffNumber) {
       toast.error("Fill in all required fields");
       return;
     }
-    const s: AcademicSupervisor = {
+    if (!form.facultyId || !form.departmentId) {
+      toast.error("Faculty and home department are required");
+      return;
+    }
+    const dept = departments.find((d) => d.id === form.departmentId)!;
+    const base: AcademicSupervisor = editing ?? {
       id: `as-new-${Date.now()}`,
+      status: "active",
+      studentsAssigned: 0,
+      reviewsPending: 0,
+      avgReviewHours: 0,
+      createdAt: new Date().toISOString(),
       staffNumber: form.staffNumber,
       firstName: form.firstName,
       lastName: form.lastName,
       email: form.email,
       phone: form.phone,
       title: form.title,
-      department: form.department as AcademicSupervisor["department"],
+      department: dept.name,
+      facultyId: form.facultyId,
+      departmentId: form.departmentId,
       officeRoom: form.officeRoom,
-      status: "active",
-      studentsAssigned: 0,
       maxLoad: Number(form.maxLoad),
-      reviewsPending: 0,
-      avgReviewHours: 0,
-      createdAt: new Date().toISOString(),
     };
-    onCreated(s);
+    const s: AcademicSupervisor = {
+      ...base,
+      staffNumber: form.staffNumber,
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      phone: form.phone,
+      title: form.title,
+      department: dept.name,
+      facultyId: form.facultyId,
+      departmentId: form.departmentId,
+      officeRoom: form.officeRoom,
+      maxLoad: Number(form.maxLoad),
+    };
+    onSave(s);
     onOpenChange(false);
   };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Academic Supervisor</DialogTitle>
+          <DialogTitle>{editing ? "Edit Academic Supervisor" : "Add Academic Supervisor"}</DialogTitle>
           <DialogDescription>
-            Creates the account and emails a welcome message with a temporary
-            password.
+            {editing
+              ? "Update the supervisor's home faculty, department, and profile."
+              : "Creates the account and emails a welcome message with a temporary password."}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid max-h-[70vh] gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-xs">Title</Label>
-            <Select
-              value={form.title}
-              onValueChange={(v) =>
-                setForm({ ...form, title: v as AcademicSupervisor["title"] })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
+            <Select value={form.title} onValueChange={(v) => setForm({ ...form, title: v as AcademicSupervisor["title"] })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {["Prof.", "Dr.", "Mr.", "Mrs.", "Ms."].map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t}
-                  </SelectItem>
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Staff number *</Label>
-            <Input
-              value={form.staffNumber}
-              onChange={(e) => setForm({ ...form, staffNumber: e.target.value })}
-            />
+            <Input value={form.staffNumber} onChange={(e) => setForm({ ...form, staffNumber: e.target.value })} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">First name *</Label>
-            <Input
-              value={form.firstName}
-              onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-            />
+            <Input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Last name *</Label>
-            <Input
-              value={form.lastName}
-              onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-            />
+            <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Email *</Label>
-            <Input
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-            />
+            <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Phone</Label>
-            <Input
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            />
+            <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs">Department</Label>
+            <Label className="text-xs">Faculty *</Label>
             <Select
-              value={form.department}
-              onValueChange={(v) => setForm({ ...form, department: v })}
+              value={form.facultyId}
+              onValueChange={(v) => setForm({ ...form, facultyId: v, departmentId: "" })}
             >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Select faculty" /></SelectTrigger>
               <SelectContent>
-                {DEPARTMENTS.map((d) => (
-                  <SelectItem key={d} value={d}>
-                    {d}
-                  </SelectItem>
+                {faculties.filter((f) => f.status === "active").map((f) => (
+                  <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Home Department *</Label>
+            <Select
+              value={form.departmentId}
+              onValueChange={(v) => {
+                const dept = departments.find((d) => d.id === v);
+                setForm({ ...form, departmentId: v, facultyId: dept?.facultyId ?? form.facultyId });
+              }}
+              disabled={!form.facultyId}
+            >
+              <SelectTrigger><SelectValue placeholder={form.facultyId ? "Select department" : "Select faculty first"} /></SelectTrigger>
+              <SelectContent>
+                {facultyDepts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -619,12 +636,14 @@ function AddDialog({
               onChange={(e) => setForm({ ...form, maxLoad: e.target.value })}
             />
           </div>
+          <p className="text-xs text-muted-foreground sm:col-span-2">
+            The supervisor's faculty determines which students can be suggested for assignment.
+            Admin can override and assign any student from any faculty if needed.
+          </p>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={submit}>Create supervisor</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={submit}>{editing ? "Save changes" : "Create supervisor"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
