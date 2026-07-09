@@ -1,6 +1,14 @@
 // Centralized mock data for Students, Academic Supervisors, Company Supervisors.
 // Frontend-only; replace with backend queries when Lovable Cloud is enabled.
 
+import {
+  SEED_DEPARTMENTS,
+  SEED_FACULTIES,
+  SEED_PROGRAMMES,
+  type Level,
+  type ProgrammeType,
+} from "./academic-structure";
+
 export type Status = "active" | "inactive" | "pending";
 export type Gender = "male" | "female";
 export type AttachmentStatus =
@@ -10,17 +18,9 @@ export type AttachmentStatus =
   | "ongoing"
   | "completed";
 
-export const DEPARTMENTS = [
-  "Computer Science",
-  "Information Technology",
-  "Electrical Engineering",
-  "Mechanical Engineering",
-  "Civil Engineering",
-  "Business Administration",
-  "Accounting & Finance",
-  "Communication",
-] as const;
-export type Department = (typeof DEPARTMENTS)[number];
+// Legacy DEPARTMENTS export — kept for back-compat, now sourced from HTU seed data.
+export const DEPARTMENTS = SEED_DEPARTMENTS.map((d) => d.name);
+export type Department = string;
 
 export const COMPANIES = [
   "Safaricom PLC",
@@ -43,7 +43,13 @@ export interface Student {
   email: string;
   phone: string;
   gender: Gender;
-  department: Department;
+  // Legacy string, kept for existing code; equals the HTU dept name.
+  department: string;
+  facultyId: string;
+  departmentId: string;
+  programmeId: string;
+  programmeType: ProgrammeType;
+  level: Level;
   yearOfStudy: 1 | 2 | 3 | 4;
   passportPhoto: string;
   status: Status;
@@ -66,7 +72,9 @@ export interface AcademicSupervisor {
   lastName: string;
   email: string;
   phone: string;
-  department: Department;
+  department: string;
+  facultyId: string;
+  departmentId: string;
   title: "Prof." | "Dr." | "Mr." | "Mrs." | "Ms.";
   officeRoom: string;
   status: Status;
@@ -109,14 +117,14 @@ export interface Company {
   county: string;
   contactPerson: string;
   contactJobTitle: string;
-  logoText: string; // initials
+  logoText: string;
   status: CompanyStatus;
   blacklistReason?: string;
   capacity: number;
   studentsHosted: number;
   supervisorsCount: number;
   applicationsReceived: number;
-  approvalRate: number; // 0-100
+  approvalRate: number;
   registeredAt: string;
   verifiedAt: string | null;
   verifiedBy: string | null;
@@ -142,7 +150,7 @@ const seedDate = (i: number, base = 2024) => {
   return d.toISOString();
 };
 
-// Academic supervisors (12)
+// Academic supervisors (12) — assigned across HTU faculties.
 export const academicSupervisors: AcademicSupervisor[] = Array.from(
   { length: 12 },
   (_, i) => {
@@ -150,14 +158,17 @@ export const academicSupervisors: AcademicSupervisor[] = Array.from(
     const last = pick(LAST, i + 5);
     const titles = ["Prof.", "Dr.", "Mr.", "Mrs.", "Ms."] as const;
     const assigned = 4 + ((i * 3) % 10);
+    const dept = SEED_DEPARTMENTS[i % SEED_DEPARTMENTS.length];
     return {
       id: `as-${i + 1}`,
       staffNumber: `STF-${1200 + i}`,
       firstName: first,
       lastName: last,
-      email: `${first}.${last}@uni.ac.ke`.toLowerCase(),
-      phone: `+2547${(11000000 + i * 13579).toString().slice(0, 8)}`,
-      department: pick(DEPARTMENTS, i),
+      email: `${first}.${last}@htu.edu.gh`.toLowerCase(),
+      phone: `+2332${(41000000 + i * 13579).toString().slice(0, 8)}`,
+      department: dept.name,
+      facultyId: dept.facultyId,
+      departmentId: dept.id,
       title: pick(titles, i),
       officeRoom: `Block ${String.fromCharCode(65 + (i % 5))}-${100 + i}`,
       status: i === 4 ? "inactive" : "active",
@@ -206,11 +217,15 @@ export const companySupervisors: CompanySupervisor[] = Array.from(
   },
 );
 
-// Students (40)
+// Students (40) — each assigned to a real HTU dept & programme, with a level.
+const LEVELS_POOL: Level[] = [100, 200, 300, 400];
 export const students: Student[] = Array.from({ length: 40 }, (_, i) => {
   const first = pick(FIRST, i);
   const last = pick(LAST, i + 1);
-  const dept = pick(DEPARTMENTS, i);
+  const dept = SEED_DEPARTMENTS[i % SEED_DEPARTMENTS.length];
+  const deptProgrammes = SEED_PROGRAMMES.filter((p) => p.departmentId === dept.id);
+  const programme = deptProgrammes[i % deptProgrammes.length];
+  const level = LEVELS_POOL[i % LEVELS_POOL.length];
   const statusRoll = i % 9;
   const attachment: AttachmentStatus =
     statusRoll < 2
@@ -227,13 +242,18 @@ export const students: Student[] = Array.from({ length: 40 }, (_, i) => {
   const compSup = companySupervisors[i % companySupervisors.length];
   return {
     id: `st-${i + 1}`,
-    regNumber: `SCT/${211 + (i % 4)}/${(2200 + i).toString().padStart(4, "0")}/2024`,
+    regNumber: `HTU/${dept.code}/${(2200 + i).toString().padStart(4, "0")}/2024`,
     firstName: first,
     lastName: last,
-    email: `${first}.${last}@students.uni.ac.ke`.toLowerCase(),
-    phone: `+2547${(33000000 + i * 19876).toString().slice(0, 8)}`,
+    email: `${first}.${last}@student.htu.edu.gh`.toLowerCase(),
+    phone: `+2332${(43000000 + i * 19876).toString().slice(0, 8)}`,
     gender: i % 2 === 0 ? "female" : "male",
-    department: dept,
+    department: dept.name,
+    facultyId: dept.facultyId,
+    departmentId: dept.id,
+    programmeId: programme.id,
+    programmeType: programme.type,
+    level,
     yearOfStudy: (((i % 4) + 1) as 1 | 2 | 3 | 4),
     passportPhoto: `https://i.pravatar.cc/150?img=${(i % 70) + 1}`,
     status: i === 14 ? "inactive" : "active",
@@ -264,6 +284,12 @@ export const findAcademicSupervisor = (id: string | null) =>
   id ? academicSupervisors.find((s) => s.id === id) ?? null : null;
 export const findCompanySupervisor = (id: string | null) =>
   id ? companySupervisors.find((s) => s.id === id) ?? null : null;
+export const findFacultyById = (id: string | null | undefined) =>
+  id ? SEED_FACULTIES.find((f) => f.id === id) ?? null : null;
+export const findDepartmentById = (id: string | null | undefined) =>
+  id ? SEED_DEPARTMENTS.find((d) => d.id === id) ?? null : null;
+export const findProgrammeById = (id: string | null | undefined) =>
+  id ? SEED_PROGRAMMES.find((p) => p.id === id) ?? null : null;
 
 export const attachmentLabel: Record<AttachmentStatus, string> = {
   not_placed: "Not Placed",
@@ -437,7 +463,7 @@ export interface Application {
   studentId: string;
   companyId: string;
   companyName: string;
-  department: Department;
+  department: string;
   academicYear: string;
   semester: "First" | "Second";
   dateApplied: string;
@@ -556,5 +582,3 @@ export const findCompany = (id: string) =>
   companies.find((c) => c.id === id) ?? null;
 export const findApplication = (id: string) =>
   applications.find((a) => a.id === id) ?? null;
-
-
