@@ -90,6 +90,20 @@ export const AUDIT_ACTIONS: { value: AuditActionType; label: string }[] = [
 const now = Date.now();
 const mins = (n: number) => new Date(now - n * 60_000).toISOString();
 
+export function appendAuditLog(
+  entry: Omit<AuditLog, "id" | "at" | "ip" | "userAgent"> & Partial<Pick<AuditLog, "ip" | "userAgent">>,
+): AuditLog {
+  const log: AuditLog = {
+    id: `al-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    at: new Date().toISOString(),
+    ip: entry.ip ?? "10.20.30.44",
+    userAgent: entry.userAgent ?? "Chrome 128 / macOS",
+    ...entry,
+  };
+  auditLogs.unshift(log);
+  return log;
+}
+
 export const auditLogs: AuditLog[] = [
   {
     id: "al-1001",
