@@ -84,6 +84,7 @@ import {
 } from "@/lib/settings-store";
 import { LEVELS, isAttachmentEligible, type Level } from "@/lib/academic-structure";
 import { appendAuditLog } from "@/lib/audit-logs-data";
+import { ImportWizard } from "@/components/import-wizard";
 
 export const Route = createFileRoute("/students")({
   head: () => ({ meta: [{ title: "Students — Attachment Admin" }] }),
