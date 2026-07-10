@@ -171,6 +171,7 @@ function AcademicSupervisorsPage() {
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="pending">Pending Setup</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
             </SelectContent>
           </Select>
