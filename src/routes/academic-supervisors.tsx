@@ -69,6 +69,8 @@ import {
   useActiveFaculties,
   useSettings,
 } from "@/lib/settings-store";
+import { ImportWizard } from "@/components/import-wizard";
+import { appendAuditLog } from "@/lib/audit-logs-data";
 
 export const Route = createFileRoute("/academic-supervisors")({
   head: () => ({ meta: [{ title: "Academic Supervisors — Attachment Admin" }] }),
