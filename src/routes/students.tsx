@@ -458,6 +458,11 @@ function StudentsPage() {
                         <DropdownMenuItem onClick={() => toast.success("Password reset email sent")}>
                           <KeyRound /> Reset password
                         </DropdownMenuItem>
+                        {s.status === "pending" && (
+                          <DropdownMenuItem onClick={() => toast.success(`Setup invitation resent to ${s.email}`)}>
+                            <Mail /> Resend Setup Invitation
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
