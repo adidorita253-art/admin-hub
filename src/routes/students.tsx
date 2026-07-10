@@ -577,10 +577,15 @@ function StudentsPage() {
           setData((prev) => [...stub, ...prev]);
           toast.success(`${count} students imported successfully. They will receive a setup invitation email.`);
           appendAuditLog({
-            actor: "Admin User",
-            action: "bulk.import",
-            entity: "student",
-            summary: `Imported ${count} students (pending setup)`,
+            actorName: "Admin User",
+            actorEmail: "admin@htu.edu.gh",
+            actorRole: "Administrator",
+            action: "import",
+            module: "students",
+            target: `${count} students`,
+            description: `Imported ${count} students via bulk upload (pending setup).`,
+            severity: "info",
+            metadata: { count },
           });
         }}
       />
