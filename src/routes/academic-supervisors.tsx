@@ -87,6 +87,7 @@ function AcademicSupervisorsPage() {
   const [viewing, setViewing] = useState<AcademicSupervisor | null>(null);
   const [editing, setEditing] = useState<AcademicSupervisor | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const cascadeDepartments = useActiveDepartments(facultyId);
   useEffect(() => {
