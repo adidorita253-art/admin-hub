@@ -1158,50 +1158,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function ImportDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Import Students</DialogTitle>
-          <DialogDescription>
-            Upload an Excel file (.xlsx) using the provided template. Rows are
-            validated before import.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="rounded-md border border-dashed p-8 text-center">
-          <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-          <p className="mt-2 text-sm">Drop your file here or click to browse</p>
-          <p className="text-xs text-muted-foreground">.xlsx, max 5 MB</p>
-        </div>
-        <Button
-          variant="link"
-          className="justify-start px-0"
-          onClick={() => toast.success("Template downloaded")}
-        >
-          <Download /> Download template
-        </Button>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button
-            onClick={() => {
-              toast.success("Imported 0 students (preview mode)");
-              onOpenChange(false);
-            }}
-          >
-            Validate & Import
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 /* -------- Single-student Assign Supervisor with Recommended / Other Faculties -------- */
 
