@@ -123,9 +123,14 @@ function AcademicSupervisorsPage() {
         title="Academic Supervisors"
         description="Manage faculty supervisors, their workload and student assignments."
         actions={
-          <Button onClick={() => setAddOpen(true)}>
-            <Plus /> Add Supervisor
-          </Button>
+          <>
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload /> Import
+            </Button>
+            <Button onClick={() => setAddOpen(true)}>
+              <Plus /> Add Supervisor
+            </Button>
+          </>
         }
       />
 
