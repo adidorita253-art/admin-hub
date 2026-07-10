@@ -12,9 +12,14 @@ export function StatusPill({ status }: { status: Status }) {
     pending:
       "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 border-amber-200/60",
   };
+  const label: Record<Status, string> = {
+    active: "Active",
+    inactive: "Inactive",
+    pending: "Pending Setup",
+  };
   return (
-    <Badge variant="outline" className={cn("capitalize font-medium", map[status])}>
-      {status}
+    <Badge variant="outline" className={cn("font-medium", map[status])}>
+      {label[status]}
     </Badge>
   );
 }

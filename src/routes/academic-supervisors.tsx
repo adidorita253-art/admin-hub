@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   UserCheck,
   Plus,
+  Upload,
   Search,
   MoreHorizontal,
   Mail,
@@ -68,6 +69,8 @@ import {
   useActiveFaculties,
   useSettings,
 } from "@/lib/settings-store";
+import { ImportWizard } from "@/components/import-wizard";
+import { appendAuditLog } from "@/lib/audit-logs-data";
 
 export const Route = createFileRoute("/academic-supervisors")({
   head: () => ({ meta: [{ title: "Academic Supervisors — Attachment Admin" }] }),
@@ -84,6 +87,7 @@ function AcademicSupervisorsPage() {
   const [viewing, setViewing] = useState<AcademicSupervisor | null>(null);
   const [editing, setEditing] = useState<AcademicSupervisor | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const cascadeDepartments = useActiveDepartments(facultyId);
   useEffect(() => {
@@ -119,9 +123,14 @@ function AcademicSupervisorsPage() {
         title="Academic Supervisors"
         description="Manage faculty supervisors, their workload and student assignments."
         actions={
-          <Button onClick={() => setAddOpen(true)}>
-            <Plus /> Add Supervisor
-          </Button>
+          <>
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload /> Import
+            </Button>
+            <Button onClick={() => setAddOpen(true)}>
+              <Plus /> Add Supervisor
+            </Button>
+          </>
         }
       />
 
@@ -162,6 +171,7 @@ function AcademicSupervisorsPage() {
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="pending">Pending Setup</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
             </SelectContent>
           </Select>
@@ -243,6 +253,11 @@ function AcademicSupervisorsPage() {
                         <DropdownMenuItem onClick={() => toast.success("Password reset email sent")}>
                           <KeyRound /> Reset password
                         </DropdownMenuItem>
+                        {s.status === "pending" && (
+                          <DropdownMenuItem onClick={() => toast.success(`Setup invitation resent to ${s.email}`)}>
+                            <Mail /> Resend Setup Invitation
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
@@ -289,6 +304,55 @@ function AcademicSupervisorsPage() {
           setData((prev) => prev.map((x) => (x.id === s.id ? s : x)));
           setEditing(null);
           toast.success("Supervisor updated");
+        }}
+      />
+      <ImportWizard
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        entity="supervisors"
+        title="Import Academic Supervisors"
+        templateFilename="HTU_IAMS_Supervisor_Import_Template.xlsx"
+        templateColumns={[
+          "First Name","Last Name","Staff ID","Email","Faculty","Department","Job Title","Phone",
+        ]}
+        sampleRow={[
+          "Sarah","Owusu","STF/2024/001","sarah.owusu@htu.edu.gh","Faculty of Applied Sciences and Technology","Computer Science","Senior Lecturer","0244000000",
+        ]}
+        previewColumns={["Name","Staff ID","Department","Job Title"]}
+        onConfirm={(count) => {
+          const now = new Date().toISOString();
+          const stub: AcademicSupervisor[] = Array.from({ length: count }).map((_, i) => ({
+            id: `imp-sup-${Date.now()}-${i}`,
+            staffNumber: `IMP/${Date.now().toString().slice(-4)}/${String(i + 1).padStart(3, "0")}`,
+            firstName: `Imported${i + 1}`,
+            lastName: "Supervisor",
+            email: `imp.sup${i + 1}.${Date.now()}@htu.edu.gh`,
+            phone: "",
+            department: "Computer Science",
+            facultyId: "fac-fast",
+            departmentId: "dep-cs",
+            title: "Dr.",
+            officeRoom: "—",
+            status: "pending",
+            studentsAssigned: 0,
+            maxLoad: 15,
+            reviewsPending: 0,
+            avgReviewHours: 0,
+            createdAt: now,
+          }));
+          setData((prev) => [...stub, ...prev]);
+          toast.success(`${count} supervisors imported successfully.`);
+          appendAuditLog({
+            actorName: "Admin User",
+            actorEmail: "admin@htu.edu.gh",
+            actorRole: "Administrator",
+            action: "import",
+            module: "supervisors",
+            target: `${count} supervisors`,
+            description: `Imported ${count} academic supervisors via bulk upload (pending setup).`,
+            severity: "info",
+            metadata: { count },
+          });
         }}
       />
     </div>

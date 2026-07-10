@@ -84,6 +84,7 @@ import {
 } from "@/lib/settings-store";
 import { LEVELS, isAttachmentEligible, type Level } from "@/lib/academic-structure";
 import { appendAuditLog } from "@/lib/audit-logs-data";
+import { ImportWizard } from "@/components/import-wizard";
 
 export const Route = createFileRoute("/students")({
   head: () => ({ meta: [{ title: "Students — Attachment Admin" }] }),
@@ -286,6 +287,7 @@ function StudentsPage() {
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="pending">Pending Setup</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
@@ -457,6 +459,11 @@ function StudentsPage() {
                         <DropdownMenuItem onClick={() => toast.success("Password reset email sent")}>
                           <KeyRound /> Reset password
                         </DropdownMenuItem>
+                        {s.status === "pending" && (
+                          <DropdownMenuItem onClick={() => toast.success(`Setup invitation resent to ${s.email}`)}>
+                            <Mail /> Resend Setup Invitation
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
@@ -524,7 +531,64 @@ function StudentsPage() {
           toast.success("Student updated");
         }}
       />
-      <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
+      <ImportWizard
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        entity="students"
+        title="Import Students"
+        templateFilename="HTU_IAMS_Student_Import_Template.xlsx"
+        templateColumns={[
+          "First Name","Last Name","Student ID","Email","Faculty","Department","Programme","Level","Phone","Programme Type",
+        ]}
+        sampleRow={[
+          "Ama","Boateng","CS/2024/001","ama.boateng@example.com","Faculty of Applied Sciences and Technology","Computer Science","BSc Computer Science","200","0244000000","BSc",
+        ]}
+        previewColumns={["Name","Student ID","Department","Level"]}
+        onConfirm={(count) => {
+          const now = new Date().toISOString();
+          const stub: Student[] = Array.from({ length: count }).map((_, i) => ({
+            id: `imp-stu-${Date.now()}-${i}`,
+            regNumber: `IMP/${Date.now().toString().slice(-4)}/${String(i + 1).padStart(3, "0")}`,
+            firstName: `Imported${i + 1}`,
+            lastName: "Student",
+            email: `imported${i + 1}.${Date.now()}@htu.edu.gh`,
+            phone: "",
+            gender: "male",
+            department: "Computer Science",
+            facultyId: "fac-fast",
+            departmentId: "dep-cs",
+            programmeId: "prog-bsc-cs",
+            programmeType: "BSc",
+            level: 200,
+            yearOfStudy: 2,
+            passportPhoto: "",
+            status: "pending",
+            attachmentStatus: "not_placed",
+            academicSupervisorId: null,
+            companySupervisorId: null,
+            companyName: null,
+            startDate: null,
+            endDate: null,
+            applicationsCount: 0,
+            logbookEntries: 0,
+            lastLogbookAt: null,
+            createdAt: now,
+          }));
+          setData((prev) => [...stub, ...prev]);
+          toast.success(`${count} students imported successfully. They will receive a setup invitation email.`);
+          appendAuditLog({
+            actorName: "Admin User",
+            actorEmail: "admin@htu.edu.gh",
+            actorRole: "Administrator",
+            action: "import",
+            module: "students",
+            target: `${count} students`,
+            description: `Imported ${count} students via bulk upload (pending setup).`,
+            severity: "info",
+            metadata: { count },
+          });
+        }}
+      />
       <AssignSupervisorDialog
         student={assignFor}
         onClose={() => setAssignFor(null)}
@@ -1094,50 +1158,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function ImportDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Import Students</DialogTitle>
-          <DialogDescription>
-            Upload an Excel file (.xlsx) using the provided template. Rows are
-            validated before import.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="rounded-md border border-dashed p-8 text-center">
-          <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-          <p className="mt-2 text-sm">Drop your file here or click to browse</p>
-          <p className="text-xs text-muted-foreground">.xlsx, max 5 MB</p>
-        </div>
-        <Button
-          variant="link"
-          className="justify-start px-0"
-          onClick={() => toast.success("Template downloaded")}
-        >
-          <Download /> Download template
-        </Button>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button
-            onClick={() => {
-              toast.success("Imported 0 students (preview mode)");
-              onOpenChange(false);
-            }}
-          >
-            Validate & Import
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 /* -------- Single-student Assign Supervisor with Recommended / Other Faculties -------- */
 
