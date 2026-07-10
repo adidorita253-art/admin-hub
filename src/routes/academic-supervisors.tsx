@@ -306,6 +306,55 @@ function AcademicSupervisorsPage() {
           toast.success("Supervisor updated");
         }}
       />
+      <ImportWizard
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        entity="supervisors"
+        title="Import Academic Supervisors"
+        templateFilename="HTU_IAMS_Supervisor_Import_Template.xlsx"
+        templateColumns={[
+          "First Name","Last Name","Staff ID","Email","Faculty","Department","Job Title","Phone",
+        ]}
+        sampleRow={[
+          "Sarah","Owusu","STF/2024/001","sarah.owusu@htu.edu.gh","Faculty of Applied Sciences and Technology","Computer Science","Senior Lecturer","0244000000",
+        ]}
+        previewColumns={["Name","Staff ID","Department","Job Title"]}
+        onConfirm={(count) => {
+          const now = new Date().toISOString();
+          const stub: AcademicSupervisor[] = Array.from({ length: count }).map((_, i) => ({
+            id: `imp-sup-${Date.now()}-${i}`,
+            staffNumber: `IMP/${Date.now().toString().slice(-4)}/${String(i + 1).padStart(3, "0")}`,
+            firstName: `Imported${i + 1}`,
+            lastName: "Supervisor",
+            email: `imp.sup${i + 1}.${Date.now()}@htu.edu.gh`,
+            phone: "",
+            department: "Computer Science",
+            facultyId: "fac-fast",
+            departmentId: "dep-cs",
+            title: "Dr.",
+            officeRoom: "—",
+            status: "pending",
+            studentsAssigned: 0,
+            maxLoad: 15,
+            reviewsPending: 0,
+            avgReviewHours: 0,
+            createdAt: now,
+          }));
+          setData((prev) => [...stub, ...prev]);
+          toast.success(`${count} supervisors imported successfully.`);
+          appendAuditLog({
+            actorName: "Admin User",
+            actorEmail: "admin@htu.edu.gh",
+            actorRole: "Administrator",
+            action: "import",
+            module: "supervisors",
+            target: `${count} supervisors`,
+            description: `Imported ${count} academic supervisors via bulk upload (pending setup).`,
+            severity: "info",
+            metadata: { count },
+          });
+        }}
+      />
     </div>
   );
 }
