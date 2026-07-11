@@ -18,6 +18,7 @@ import { Route as LettersRouteImport } from './routes/letters'
 import { Route as CompanySupervisorsRouteImport } from './routes/company-supervisors'
 import { Route as CompaniesRouteImport } from './routes/companies'
 import { Route as AuditLogsRouteImport } from './routes/audit-logs'
+import { Route as ApplicationsRouteImport } from './routes/applications'
 import { Route as AcademicSupervisorsRouteImport } from './routes/academic-supervisors'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApplicationsIndexRouteImport } from './routes/applications.index'
@@ -69,6 +70,11 @@ const AuditLogsRoute = AuditLogsRouteImport.update({
   path: '/audit-logs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApplicationsRoute = ApplicationsRouteImport.update({
+  id: '/applications',
+  path: '/applications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AcademicSupervisorsRoute = AcademicSupervisorsRouteImport.update({
   id: '/academic-supervisors',
   path: '/academic-supervisors',
@@ -80,9 +86,9 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApplicationsIndexRoute = ApplicationsIndexRouteImport.update({
-  id: '/applications/',
-  path: '/applications/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => ApplicationsRoute,
 } as any)
 const LogbooksIdRoute = LogbooksIdRouteImport.update({
   id: '/$id',
@@ -90,14 +96,15 @@ const LogbooksIdRoute = LogbooksIdRouteImport.update({
   getParentRoute: () => LogbooksRoute,
 } as any)
 const ApplicationsIdRoute = ApplicationsIdRouteImport.update({
-  id: '/applications/$id',
-  path: '/applications/$id',
-  getParentRoute: () => rootRouteImport,
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApplicationsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/academic-supervisors': typeof AcademicSupervisorsRoute
+  '/applications': typeof ApplicationsRouteWithChildren
   '/audit-logs': typeof AuditLogsRoute
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
@@ -131,6 +138,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/academic-supervisors': typeof AcademicSupervisorsRoute
+  '/applications': typeof ApplicationsRouteWithChildren
   '/audit-logs': typeof AuditLogsRoute
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
@@ -149,6 +157,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/academic-supervisors'
+    | '/applications'
     | '/audit-logs'
     | '/companies'
     | '/company-supervisors'
@@ -181,6 +190,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/academic-supervisors'
+    | '/applications'
     | '/audit-logs'
     | '/companies'
     | '/company-supervisors'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcademicSupervisorsRoute: typeof AcademicSupervisorsRoute
+  ApplicationsRoute: typeof ApplicationsRouteWithChildren
   AuditLogsRoute: typeof AuditLogsRoute
   CompaniesRoute: typeof CompaniesRoute
   CompanySupervisorsRoute: typeof CompanySupervisorsRoute
@@ -207,8 +218,6 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   SettingsRoute: typeof SettingsRoute
   StudentsRoute: typeof StudentsRoute
-  ApplicationsIdRoute: typeof ApplicationsIdRoute
-  ApplicationsIndexRoute: typeof ApplicationsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -276,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuditLogsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/applications': {
+      id: '/applications'
+      path: '/applications'
+      fullPath: '/applications'
+      preLoaderRoute: typeof ApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/academic-supervisors': {
       id: '/academic-supervisors'
       path: '/academic-supervisors'
@@ -292,10 +308,10 @@ declare module '@tanstack/react-router' {
     }
     '/applications/': {
       id: '/applications/'
-      path: '/applications'
+      path: '/'
       fullPath: '/applications/'
       preLoaderRoute: typeof ApplicationsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApplicationsRoute
     }
     '/logbooks/$id': {
       id: '/logbooks/$id'
@@ -306,13 +322,27 @@ declare module '@tanstack/react-router' {
     }
     '/applications/$id': {
       id: '/applications/$id'
-      path: '/applications/$id'
+      path: '/$id'
       fullPath: '/applications/$id'
       preLoaderRoute: typeof ApplicationsIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApplicationsRoute
     }
   }
 }
+
+interface ApplicationsRouteChildren {
+  ApplicationsIdRoute: typeof ApplicationsIdRoute
+  ApplicationsIndexRoute: typeof ApplicationsIndexRoute
+}
+
+const ApplicationsRouteChildren: ApplicationsRouteChildren = {
+  ApplicationsIdRoute: ApplicationsIdRoute,
+  ApplicationsIndexRoute: ApplicationsIndexRoute,
+}
+
+const ApplicationsRouteWithChildren = ApplicationsRoute._addFileChildren(
+  ApplicationsRouteChildren,
+)
 
 interface LogbooksRouteChildren {
   LogbooksIdRoute: typeof LogbooksIdRoute
@@ -329,6 +359,7 @@ const LogbooksRouteWithChildren = LogbooksRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcademicSupervisorsRoute: AcademicSupervisorsRoute,
+  ApplicationsRoute: ApplicationsRouteWithChildren,
   AuditLogsRoute: AuditLogsRoute,
   CompaniesRoute: CompaniesRoute,
   CompanySupervisorsRoute: CompanySupervisorsRoute,
@@ -338,8 +369,6 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   SettingsRoute: SettingsRoute,
   StudentsRoute: StudentsRoute,
-  ApplicationsIdRoute: ApplicationsIdRoute,
-  ApplicationsIndexRoute: ApplicationsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
