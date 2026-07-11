@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Building2,
   Search,
@@ -77,6 +77,9 @@ import { AttachmentPill } from "@/components/status-pill";
 
 export const Route = createFileRoute("/companies")({
   head: () => ({ meta: [{ title: "Companies — Attachment Admin" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    add: s.add === 1 || s.add === "1" || s.add === true ? 1 : undefined,
+  }),
   component: CompaniesPage,
 });
 
@@ -96,6 +99,8 @@ const INDUSTRY_OPTIONS = [
 ];
 
 function CompaniesPage() {
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [data, setData] = useState<Company[]>(seed);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<string>("all");
@@ -105,6 +110,13 @@ function CompaniesPage() {
   const [editing, setEditing] = useState<Company | null>(null);
   const [adding, setAdding] = useState(false);
   const [blacklisting, setBlacklisting] = useState<Company | null>(null);
+
+  useEffect(() => {
+    if (search.add) {
+      setAdding(true);
+      navigate({ search: { add: undefined }, replace: true });
+    }
+  }, [search.add, navigate]);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();

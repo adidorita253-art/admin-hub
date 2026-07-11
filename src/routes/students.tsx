@@ -88,6 +88,9 @@ import { ImportWizard } from "@/components/import-wizard";
 
 export const Route = createFileRoute("/students")({
   head: () => ({ meta: [{ title: "Students — Attachment Admin" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    add: s.add === 1 || s.add === "1" || s.add === true ? 1 : undefined,
+  }),
   component: StudentsPage,
 });
 
@@ -95,6 +98,8 @@ const PAGE_SIZE = 25;
 
 function StudentsPage() {
   const faculties = useActiveFaculties();
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [data, setData] = useState<Student[]>(seedStudents);
 
   const [query, setQuery] = useState("");
@@ -120,6 +125,13 @@ function StudentsPage() {
   const [viewing, setViewing] = useState<Student | null>(null);
   const [editing, setEditing] = useState<Student | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+
+  useEffect(() => {
+    if (search.add) {
+      setAddOpen(true);
+      navigate({ search: { add: undefined }, replace: true });
+    }
+  }, [search.add, navigate]);
   const [importOpen, setImportOpen] = useState(false);
   const [assignFor, setAssignFor] = useState<Student | null>(null);
   const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
@@ -367,7 +379,7 @@ function StudentsPage() {
                 />
               </TableHead>
               <TableHead>Student</TableHead>
-              <TableHead>Reg No.</TableHead>
+              <TableHead>Student ID</TableHead>
               <TableHead>Faculty</TableHead>
               <TableHead>Department</TableHead>
               <TableHead>Programme</TableHead>
@@ -1051,7 +1063,7 @@ function StudentFormDialog({
           <Field label="Last name *">
             <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
           </Field>
-          <Field label="Reg number *">
+          <Field label="Student ID *">
             <Input
               value={form.regNumber}
               onChange={(e) => setForm({ ...form, regNumber: e.target.value })}
