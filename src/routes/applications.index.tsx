@@ -42,7 +42,7 @@ import {
 import { useApplications } from "@/lib/applications-store";
 import { useActiveDepartments } from "@/lib/settings-store";
 
-export const Route = createFileRoute("/applications")({
+export const Route = createFileRoute("/applications/")({
   head: () => ({ meta: [{ title: "Applications — Attachment Admin" }] }),
   component: ApplicationsPage,
 });
