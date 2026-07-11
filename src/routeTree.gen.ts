@@ -18,9 +18,9 @@ import { Route as LettersRouteImport } from './routes/letters'
 import { Route as CompanySupervisorsRouteImport } from './routes/company-supervisors'
 import { Route as CompaniesRouteImport } from './routes/companies'
 import { Route as AuditLogsRouteImport } from './routes/audit-logs'
-import { Route as ApplicationsRouteImport } from './routes/applications'
 import { Route as AcademicSupervisorsRouteImport } from './routes/academic-supervisors'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApplicationsIndexRouteImport } from './routes/applications.index'
 import { Route as LogbooksIdRouteImport } from './routes/logbooks.$id'
 import { Route as ApplicationsIdRouteImport } from './routes/applications.$id'
 
@@ -69,11 +69,6 @@ const AuditLogsRoute = AuditLogsRouteImport.update({
   path: '/audit-logs',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApplicationsRoute = ApplicationsRouteImport.update({
-  id: '/applications',
-  path: '/applications',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AcademicSupervisorsRoute = AcademicSupervisorsRouteImport.update({
   id: '/academic-supervisors',
   path: '/academic-supervisors',
@@ -84,21 +79,25 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApplicationsIndexRoute = ApplicationsIndexRouteImport.update({
+  id: '/applications/',
+  path: '/applications/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LogbooksIdRoute = LogbooksIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => LogbooksRoute,
 } as any)
 const ApplicationsIdRoute = ApplicationsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApplicationsRoute,
+  id: '/applications/$id',
+  path: '/applications/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/academic-supervisors': typeof AcademicSupervisorsRoute
-  '/applications': typeof ApplicationsRouteWithChildren
   '/audit-logs': typeof AuditLogsRoute
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
@@ -110,11 +109,11 @@ export interface FileRoutesByFullPath {
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/logbooks/$id': typeof LogbooksIdRoute
+  '/applications/': typeof ApplicationsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/academic-supervisors': typeof AcademicSupervisorsRoute
-  '/applications': typeof ApplicationsRouteWithChildren
   '/audit-logs': typeof AuditLogsRoute
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
@@ -126,12 +125,12 @@ export interface FileRoutesByTo {
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/logbooks/$id': typeof LogbooksIdRoute
+  '/applications': typeof ApplicationsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/academic-supervisors': typeof AcademicSupervisorsRoute
-  '/applications': typeof ApplicationsRouteWithChildren
   '/audit-logs': typeof AuditLogsRoute
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
@@ -143,13 +142,13 @@ export interface FileRoutesById {
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/logbooks/$id': typeof LogbooksIdRoute
+  '/applications/': typeof ApplicationsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/academic-supervisors'
-    | '/applications'
     | '/audit-logs'
     | '/companies'
     | '/company-supervisors'
@@ -161,11 +160,11 @@ export interface FileRouteTypes {
     | '/students'
     | '/applications/$id'
     | '/logbooks/$id'
+    | '/applications/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/academic-supervisors'
-    | '/applications'
     | '/audit-logs'
     | '/companies'
     | '/company-supervisors'
@@ -177,11 +176,11 @@ export interface FileRouteTypes {
     | '/students'
     | '/applications/$id'
     | '/logbooks/$id'
+    | '/applications'
   id:
     | '__root__'
     | '/'
     | '/academic-supervisors'
-    | '/applications'
     | '/audit-logs'
     | '/companies'
     | '/company-supervisors'
@@ -193,12 +192,12 @@ export interface FileRouteTypes {
     | '/students'
     | '/applications/$id'
     | '/logbooks/$id'
+    | '/applications/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AcademicSupervisorsRoute: typeof AcademicSupervisorsRoute
-  ApplicationsRoute: typeof ApplicationsRouteWithChildren
   AuditLogsRoute: typeof AuditLogsRoute
   CompaniesRoute: typeof CompaniesRoute
   CompanySupervisorsRoute: typeof CompanySupervisorsRoute
@@ -208,6 +207,8 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   SettingsRoute: typeof SettingsRoute
   StudentsRoute: typeof StudentsRoute
+  ApplicationsIdRoute: typeof ApplicationsIdRoute
+  ApplicationsIndexRoute: typeof ApplicationsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -275,13 +276,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuditLogsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/applications': {
-      id: '/applications'
-      path: '/applications'
-      fullPath: '/applications'
-      preLoaderRoute: typeof ApplicationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/academic-supervisors': {
       id: '/academic-supervisors'
       path: '/academic-supervisors'
@@ -296,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/applications/': {
+      id: '/applications/'
+      path: '/applications'
+      fullPath: '/applications/'
+      preLoaderRoute: typeof ApplicationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/logbooks/$id': {
       id: '/logbooks/$id'
       path: '/$id'
@@ -305,25 +306,13 @@ declare module '@tanstack/react-router' {
     }
     '/applications/$id': {
       id: '/applications/$id'
-      path: '/$id'
+      path: '/applications/$id'
       fullPath: '/applications/$id'
       preLoaderRoute: typeof ApplicationsIdRouteImport
-      parentRoute: typeof ApplicationsRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface ApplicationsRouteChildren {
-  ApplicationsIdRoute: typeof ApplicationsIdRoute
-}
-
-const ApplicationsRouteChildren: ApplicationsRouteChildren = {
-  ApplicationsIdRoute: ApplicationsIdRoute,
-}
-
-const ApplicationsRouteWithChildren = ApplicationsRoute._addFileChildren(
-  ApplicationsRouteChildren,
-)
 
 interface LogbooksRouteChildren {
   LogbooksIdRoute: typeof LogbooksIdRoute
@@ -340,7 +329,6 @@ const LogbooksRouteWithChildren = LogbooksRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AcademicSupervisorsRoute: AcademicSupervisorsRoute,
-  ApplicationsRoute: ApplicationsRouteWithChildren,
   AuditLogsRoute: AuditLogsRoute,
   CompaniesRoute: CompaniesRoute,
   CompanySupervisorsRoute: CompanySupervisorsRoute,
@@ -350,17 +338,9 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   SettingsRoute: SettingsRoute,
   StudentsRoute: StudentsRoute,
+  ApplicationsIdRoute: ApplicationsIdRoute,
+  ApplicationsIndexRoute: ApplicationsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
