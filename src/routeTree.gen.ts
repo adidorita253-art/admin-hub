@@ -21,6 +21,7 @@ import { Route as AuditLogsRouteImport } from './routes/audit-logs'
 import { Route as ApplicationsRouteImport } from './routes/applications'
 import { Route as AcademicSupervisorsRouteImport } from './routes/academic-supervisors'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApplicationsIndexRouteImport } from './routes/applications.index'
 import { Route as LogbooksIdRouteImport } from './routes/logbooks.$id'
 import { Route as ApplicationsIdRouteImport } from './routes/applications.$id'
 
@@ -84,6 +85,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApplicationsIndexRoute = ApplicationsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ApplicationsRoute,
+} as any)
 const LogbooksIdRoute = LogbooksIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -110,11 +116,11 @@ export interface FileRoutesByFullPath {
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/logbooks/$id': typeof LogbooksIdRoute
+  '/applications/': typeof ApplicationsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/academic-supervisors': typeof AcademicSupervisorsRoute
-  '/applications': typeof ApplicationsRouteWithChildren
   '/audit-logs': typeof AuditLogsRoute
   '/companies': typeof CompaniesRoute
   '/company-supervisors': typeof CompanySupervisorsRoute
@@ -126,6 +132,7 @@ export interface FileRoutesByTo {
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/logbooks/$id': typeof LogbooksIdRoute
+  '/applications': typeof ApplicationsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +150,7 @@ export interface FileRoutesById {
   '/students': typeof StudentsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/logbooks/$id': typeof LogbooksIdRoute
+  '/applications/': typeof ApplicationsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,11 +169,11 @@ export interface FileRouteTypes {
     | '/students'
     | '/applications/$id'
     | '/logbooks/$id'
+    | '/applications/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/academic-supervisors'
-    | '/applications'
     | '/audit-logs'
     | '/companies'
     | '/company-supervisors'
@@ -177,6 +185,7 @@ export interface FileRouteTypes {
     | '/students'
     | '/applications/$id'
     | '/logbooks/$id'
+    | '/applications'
   id:
     | '__root__'
     | '/'
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
     | '/students'
     | '/applications/$id'
     | '/logbooks/$id'
+    | '/applications/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -296,6 +306,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/applications/': {
+      id: '/applications/'
+      path: '/'
+      fullPath: '/applications/'
+      preLoaderRoute: typeof ApplicationsIndexRouteImport
+      parentRoute: typeof ApplicationsRoute
+    }
     '/logbooks/$id': {
       id: '/logbooks/$id'
       path: '/$id'
@@ -315,10 +332,12 @@ declare module '@tanstack/react-router' {
 
 interface ApplicationsRouteChildren {
   ApplicationsIdRoute: typeof ApplicationsIdRoute
+  ApplicationsIndexRoute: typeof ApplicationsIndexRoute
 }
 
 const ApplicationsRouteChildren: ApplicationsRouteChildren = {
   ApplicationsIdRoute: ApplicationsIdRoute,
+  ApplicationsIndexRoute: ApplicationsIndexRoute,
 }
 
 const ApplicationsRouteWithChildren = ApplicationsRoute._addFileChildren(
@@ -354,3 +373,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
