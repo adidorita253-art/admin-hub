@@ -88,6 +88,9 @@ import { ImportWizard } from "@/components/import-wizard";
 
 export const Route = createFileRoute("/students")({
   head: () => ({ meta: [{ title: "Students — Attachment Admin" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    add: s.add === 1 || s.add === "1" || s.add === true ? 1 : undefined,
+  }),
   component: StudentsPage,
 });
 
@@ -367,7 +370,7 @@ function StudentsPage() {
                 />
               </TableHead>
               <TableHead>Student</TableHead>
-              <TableHead>Reg No.</TableHead>
+              <TableHead>Student ID</TableHead>
               <TableHead>Faculty</TableHead>
               <TableHead>Department</TableHead>
               <TableHead>Programme</TableHead>
@@ -1051,7 +1054,7 @@ function StudentFormDialog({
           <Field label="Last name *">
             <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
           </Field>
-          <Field label="Reg number *">
+          <Field label="Student ID *">
             <Input
               value={form.regNumber}
               onChange={(e) => setForm({ ...form, regNumber: e.target.value })}

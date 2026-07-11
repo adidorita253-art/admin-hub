@@ -143,14 +143,15 @@ function DashboardPage() {
         description="Live snapshot of placements, supervisors and logbook activity."
         actions={
           <>
-            <Button variant="outline" size="sm">
-              <Plus className="h-4 w-4" /> Add Student
+            <Button asChild variant="outline" size="sm">
+              <Link to="/students" search={{ add: 1 }}>
+                <Plus className="h-4 w-4" /> Add Student
+              </Link>
             </Button>
-            <Button variant="outline" size="sm">
-              <Plus className="h-4 w-4" /> Add Company
-            </Button>
-            <Button size="sm">
-              <Mail className="h-4 w-4" /> Generate Letter
+            <Button asChild variant="outline" size="sm">
+              <Link to="/companies" search={{ add: 1 }}>
+                <Plus className="h-4 w-4" /> Add Company
+              </Link>
             </Button>
           </>
         }
