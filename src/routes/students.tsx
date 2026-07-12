@@ -90,9 +90,11 @@ export const Route = createFileRoute("/students")({
   head: () => ({ meta: [{ title: "Students — Attachment Admin" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
     add: s.add === 1 || s.add === "1" || s.add === true ? 1 : undefined,
+    view: typeof s.view === "string" && s.view.length > 0 ? s.view : undefined,
   }),
   component: StudentsPage,
 });
+
 
 const PAGE_SIZE = 25;
 
