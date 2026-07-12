@@ -349,9 +349,15 @@ function ApplicationDetailPage() {
                 {student?.regNumber} · {app.department}
               </div>
             </div>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/students">View Full Profile</Link>
+            <Button asChild variant="outline" size="sm" disabled={!student}>
+              <Link
+                to="/students"
+                search={{ view: student?.id, add: undefined }}
+              >
+                View Full Profile
+              </Link>
             </Button>
+
           </CardContent>
         </Card>
 
