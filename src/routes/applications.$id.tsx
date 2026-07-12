@@ -838,62 +838,142 @@ function ApplicationDetailPage() {
       <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>
-              {supervisor ? "Reassign" : "Assign"} Academic Supervisor
-            </DialogTitle>
+            <DialogTitle>Assign Academic Supervisor</DialogTitle>
             <DialogDescription>
-              Search and pick a supervisor for this application.
+              {supervisor ? "Reassign the" : "Assign an"} academic supervisor
+              for this application.
             </DialogDescription>
           </DialogHeader>
+
+          {student && (
+            <div className="rounded-md border bg-muted/30 p-3 text-sm">
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Selected Student
+              </div>
+              <div className="font-medium">
+                {student.firstName} {student.lastName}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {studentFaculty?.name ?? "—"} · {student.department} · Level{" "}
+                {student.level} · {student.programmeType}
+              </div>
+            </div>
+          )}
+
           <div className="relative">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by name, department or staff number…"
+              placeholder="Search supervisors..."
               value={assignSearch}
               onChange={(e) => setAssignSearch(e.target.value)}
               className="pl-8"
             />
           </div>
-          <div className="max-h-72 overflow-y-auto rounded-md border">
-            {supervisorMatches.length === 0 && (
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                No matches.
+
+          <div className="max-h-72 space-y-3 overflow-y-auto">
+            <div>
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Supervisors — {studentFaculty?.name ?? "—"}
               </div>
-            )}
-            {supervisorMatches.map((s) => {
-              const selected = assignSelected === s.id;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setAssignSelected(s.id)}
-                  className={`flex w-full items-center justify-between gap-3 border-b p-3 text-left text-sm last:border-b-0 hover:bg-muted/50 ${
-                    selected ? "bg-primary/10" : ""
-                  }`}
-                >
-                  <div>
-                    <div className="font-medium">
-                      {s.title} {s.firstName} {s.lastName}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {s.department} · {s.staffNumber}
-                    </div>
+              <div className="rounded-md border">
+                {sameFacultySupervisors.length === 0 ? (
+                  <div className="p-3 text-center text-xs text-muted-foreground">
+                    No supervisors found in {studentFaculty?.name ?? "this faculty"}.
+                    Use the override option below to assign from another faculty.
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {s.studentsAssigned}/{s.maxLoad} load
+                ) : (
+                  sameFacultySupervisors.map((s) => {
+                    const selected = assignSelected === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setAssignSelected(s.id)}
+                        className={`flex w-full items-center justify-between gap-3 border-b p-3 text-left text-sm last:border-b-0 hover:bg-muted/50 ${
+                          selected ? "bg-primary/10" : ""
+                        }`}
+                      >
+                        <div>
+                          <div className="font-medium">
+                            {s.title} {s.firstName} {s.lastName}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {s.department} · {s.studentsAssigned} students
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {s.studentsAssigned}/{s.maxLoad} load
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="button"
+                onClick={() => setAssignOverride((v) => !v)}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                {assignOverride ? "▾" : "▸"} Assign supervisor from a different faculty
+              </button>
+              {assignOverride && (
+                <div className="mt-2">
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Other Faculties (Override)
                   </div>
-                </button>
-              );
-            })}
+                  <div className="rounded-md border">
+                    {otherFacultySupervisors.length === 0 ? (
+                      <div className="p-3 text-center text-xs text-muted-foreground">
+                        No supervisors match.
+                      </div>
+                    ) : (
+                      otherFacultySupervisors.map((s) => {
+                        const selected = assignSelected === s.id;
+                        const sFac = findFacultyById(s.facultyId);
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => setAssignSelected(s.id)}
+                            className={`flex w-full items-center justify-between gap-3 border-b p-3 text-left text-sm last:border-b-0 hover:bg-muted/50 ${
+                              selected ? "bg-primary/10" : ""
+                            }`}
+                          >
+                            <div>
+                              <div className="font-medium">
+                                {s.title} {s.firstName} {s.lastName}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {sFac?.name ?? s.department} · {s.studentsAssigned} students
+                              </div>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {s.studentsAssigned}/{s.maxLoad} load
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setAssignOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={submitAssign}>Save Assignment</Button>
+            <Button onClick={submitAssign} disabled={!assignSelected}>
+              Assign
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
