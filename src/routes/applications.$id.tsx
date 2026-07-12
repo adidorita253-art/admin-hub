@@ -378,9 +378,15 @@ function ApplicationDetailPage() {
                   : "—"}
               </div>
             </div>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/companies">View Company</Link>
+            <Button asChild variant="outline" size="sm" disabled={!company}>
+              <Link
+                to="/companies"
+                search={{ view: company?.id, add: undefined }}
+              >
+                View Company
+              </Link>
             </Button>
+
           </CardContent>
         </Card>
       </div>
