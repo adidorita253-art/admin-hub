@@ -131,9 +131,19 @@ function StudentsPage() {
   useEffect(() => {
     if (search.add) {
       setAddOpen(true);
-      navigate({ search: { add: undefined }, replace: true });
+      navigate({ search: { add: undefined, view: search.view }, replace: true });
     }
-  }, [search.add, navigate]);
+  }, [search.add, search.view, navigate]);
+  useEffect(() => {
+    if (search.view) {
+      const s = seedStudents.find((x) => x.id === search.view);
+      if (s) {
+        setViewing(s);
+        navigate({ search: { add: search.add, view: undefined }, replace: true });
+      }
+    }
+  }, [search.view, search.add, navigate]);
+
   const [importOpen, setImportOpen] = useState(false);
   const [assignFor, setAssignFor] = useState<Student | null>(null);
   const [bulkAssignOpen, setBulkAssignOpen] = useState(false);
