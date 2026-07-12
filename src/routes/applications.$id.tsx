@@ -156,11 +156,23 @@ function ApplicationDetailPage() {
       app.id,
       `Manually approved — reason: ${approveReason}.`,
     );
+    appendAuditLog({
+      actorName: "Admin User",
+      actorEmail: "admin@htu.edu.gh",
+      actorRole: "Administrator",
+      action: "approve",
+      module: "applications",
+      target: `Application ${app.code}`,
+      targetId: app.id,
+      description: `Manually approved application ${app.code} for ${student?.firstName ?? ""} ${student?.lastName ?? ""} → ${app.companyName}. Reason: ${approveReason}.`,
+      severity: "info",
+    });
     toast.success("Application approved", {
-      description: "Student has been notified.",
+      description: `Student notified: Your application to ${app.companyName} has been approved.`,
     });
     setApproveOpen(false);
   };
+
 
   const submitReject = () => {
     if (!rejectReason.trim()) {
