@@ -79,9 +79,11 @@ export const Route = createFileRoute("/companies")({
   head: () => ({ meta: [{ title: "Companies — Attachment Admin" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
     add: s.add === 1 || s.add === "1" || s.add === true ? 1 : undefined,
+    view: typeof s.view === "string" && s.view.length > 0 ? s.view : undefined,
   }),
   component: CompaniesPage,
 });
+
 
 const INDUSTRY_OPTIONS = [
   "Telecommunications",
