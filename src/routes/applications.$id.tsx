@@ -102,6 +102,8 @@ function ApplicationDetailPage() {
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignSearch, setAssignSearch] = useState("");
   const [assignSelected, setAssignSelected] = useState<string | null>(null);
+  const [assignOverride, setAssignOverride] = useState(false);
+
 
   const [note, setNote] = useState("");
 
