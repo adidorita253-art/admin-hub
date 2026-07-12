@@ -190,12 +190,24 @@ function ApplicationDetailPage() {
       app.id,
       `Manually rejected — reason: ${rejectReason.trim()}.`,
     );
+    appendAuditLog({
+      actorName: "Admin User",
+      actorEmail: "admin@htu.edu.gh",
+      actorRole: "Administrator",
+      action: "reject",
+      module: "applications",
+      target: `Application ${app.code}`,
+      targetId: app.id,
+      description: `Manually rejected application ${app.code} for ${student?.firstName ?? ""} ${student?.lastName ?? ""} → ${app.companyName}. Reason: ${rejectReason.trim()}.`,
+      severity: "warning",
+    });
     toast.success("Application rejected", {
-      description: "Student has been notified.",
+      description: `Student notified: Your application to ${app.companyName} was not approved.`,
     });
     setRejectOpen(false);
     setRejectReason("");
   };
+
 
   const submitExtend = () => {
     if (!extendDate) {
