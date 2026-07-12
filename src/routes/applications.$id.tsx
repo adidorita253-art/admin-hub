@@ -52,16 +52,19 @@ import {
   academicSupervisors,
   findAcademicSupervisor,
   findCompany,
+  findFacultyById,
   findStudent,
   stageLabel,
   type AppStage,
 } from "@/lib/mock-data";
 import { applicationsStore, useApplications } from "@/lib/applications-store";
+import { appendAuditLog } from "@/lib/audit-logs-data";
 import {
   ApprovalBadge,
   LetterBadge,
   StageBadge,
 } from "@/components/application-badges";
+
 
 export const Route = createFileRoute("/applications/$id")({
   head: () => ({ meta: [{ title: "Application — Attachment Admin" }] }),
