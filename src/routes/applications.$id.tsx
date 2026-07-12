@@ -290,15 +290,25 @@ function ApplicationDetailPage() {
     toast.success("Note added");
   };
 
-  const supervisorMatches = academicSupervisors.filter((s) => {
-    const q = assignSearch.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      `${s.firstName} ${s.lastName}`.toLowerCase().includes(q) ||
-      s.department.toLowerCase().includes(q) ||
-      s.staffNumber.toLowerCase().includes(q)
-    );
-  });
+  const studentFaculty = student ? findFacultyById(student.facultyId) : null;
+  const activeSupervisors = academicSupervisors.filter((s) => s.status === "active");
+  const supervisorMatches = (list: typeof academicSupervisors) =>
+    list.filter((s) => {
+      const q = assignSearch.trim().toLowerCase();
+      if (!q) return true;
+      return (
+        `${s.firstName} ${s.lastName}`.toLowerCase().includes(q) ||
+        s.department.toLowerCase().includes(q) ||
+        s.staffNumber.toLowerCase().includes(q)
+      );
+    });
+  const sameFacultySupervisors = supervisorMatches(
+    activeSupervisors.filter((s) => student && s.facultyId === student.facultyId),
+  );
+  const otherFacultySupervisors = supervisorMatches(
+    activeSupervisors.filter((s) => !student || s.facultyId !== student.facultyId),
+  );
+
 
   const decided =
     app.approvalStatus === "approved" || app.approvalStatus === "rejected";
