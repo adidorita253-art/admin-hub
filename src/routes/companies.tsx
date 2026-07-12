@@ -79,9 +79,11 @@ export const Route = createFileRoute("/companies")({
   head: () => ({ meta: [{ title: "Companies — Attachment Admin" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
     add: s.add === 1 || s.add === "1" || s.add === true ? 1 : undefined,
+    view: typeof s.view === "string" && s.view.length > 0 ? s.view : undefined,
   }),
   component: CompaniesPage,
 });
+
 
 const INDUSTRY_OPTIONS = [
   "Telecommunications",
@@ -114,9 +116,19 @@ function CompaniesPage() {
   useEffect(() => {
     if (search.add) {
       setAdding(true);
-      navigate({ search: { add: undefined }, replace: true });
+      navigate({ search: { add: undefined, view: search.view }, replace: true });
     }
-  }, [search.add, navigate]);
+  }, [search.add, search.view, navigate]);
+  useEffect(() => {
+    if (search.view) {
+      const c = seed.find((x) => x.id === search.view);
+      if (c) {
+        setViewing(c);
+        navigate({ search: { add: search.add, view: undefined }, replace: true });
+      }
+    }
+  }, [search.view, search.add, navigate]);
+
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();

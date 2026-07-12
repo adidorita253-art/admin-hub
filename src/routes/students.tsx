@@ -90,9 +90,11 @@ export const Route = createFileRoute("/students")({
   head: () => ({ meta: [{ title: "Students — Attachment Admin" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
     add: s.add === 1 || s.add === "1" || s.add === true ? 1 : undefined,
+    view: typeof s.view === "string" && s.view.length > 0 ? s.view : undefined,
   }),
   component: StudentsPage,
 });
+
 
 const PAGE_SIZE = 25;
 
@@ -129,9 +131,19 @@ function StudentsPage() {
   useEffect(() => {
     if (search.add) {
       setAddOpen(true);
-      navigate({ search: { add: undefined }, replace: true });
+      navigate({ search: { add: undefined, view: search.view }, replace: true });
     }
-  }, [search.add, navigate]);
+  }, [search.add, search.view, navigate]);
+  useEffect(() => {
+    if (search.view) {
+      const s = seedStudents.find((x) => x.id === search.view);
+      if (s) {
+        setViewing(s);
+        navigate({ search: { add: search.add, view: undefined }, replace: true });
+      }
+    }
+  }, [search.view, search.add, navigate]);
+
   const [importOpen, setImportOpen] = useState(false);
   const [assignFor, setAssignFor] = useState<Student | null>(null);
   const [bulkAssignOpen, setBulkAssignOpen] = useState(false);

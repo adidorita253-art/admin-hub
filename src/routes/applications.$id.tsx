@@ -52,16 +52,19 @@ import {
   academicSupervisors,
   findAcademicSupervisor,
   findCompany,
+  findFacultyById,
   findStudent,
   stageLabel,
   type AppStage,
 } from "@/lib/mock-data";
 import { applicationsStore, useApplications } from "@/lib/applications-store";
+import { appendAuditLog } from "@/lib/audit-logs-data";
 import {
   ApprovalBadge,
   LetterBadge,
   StageBadge,
 } from "@/components/application-badges";
+
 
 export const Route = createFileRoute("/applications/$id")({
   head: () => ({ meta: [{ title: "Application — Attachment Admin" }] }),
@@ -99,6 +102,8 @@ function ApplicationDetailPage() {
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignSearch, setAssignSearch] = useState("");
   const [assignSelected, setAssignSelected] = useState<string | null>(null);
+  const [assignOverride, setAssignOverride] = useState(false);
+
 
   const [note, setNote] = useState("");
 
@@ -153,11 +158,23 @@ function ApplicationDetailPage() {
       app.id,
       `Manually approved — reason: ${approveReason}.`,
     );
+    appendAuditLog({
+      actorName: "Admin User",
+      actorEmail: "admin@htu.edu.gh",
+      actorRole: "Administrator",
+      action: "approve",
+      module: "applications",
+      target: `Application ${app.code}`,
+      targetId: app.id,
+      description: `Manually approved application ${app.code} for ${student?.firstName ?? ""} ${student?.lastName ?? ""} → ${app.companyName}. Reason: ${approveReason}.`,
+      severity: "info",
+    });
     toast.success("Application approved", {
-      description: "Student has been notified.",
+      description: `Student notified: Your application to ${app.companyName} has been approved.`,
     });
     setApproveOpen(false);
   };
+
 
   const submitReject = () => {
     if (!rejectReason.trim()) {
@@ -175,12 +192,24 @@ function ApplicationDetailPage() {
       app.id,
       `Manually rejected — reason: ${rejectReason.trim()}.`,
     );
+    appendAuditLog({
+      actorName: "Admin User",
+      actorEmail: "admin@htu.edu.gh",
+      actorRole: "Administrator",
+      action: "reject",
+      module: "applications",
+      target: `Application ${app.code}`,
+      targetId: app.id,
+      description: `Manually rejected application ${app.code} for ${student?.firstName ?? ""} ${student?.lastName ?? ""} → ${app.companyName}. Reason: ${rejectReason.trim()}.`,
+      severity: "warning",
+    });
     toast.success("Application rejected", {
-      description: "Student has been notified.",
+      description: `Student notified: Your application to ${app.companyName} was not approved.`,
     });
     setRejectOpen(false);
     setRejectReason("");
   };
+
 
   const submitExtend = () => {
     if (!extendDate) {
@@ -261,15 +290,25 @@ function ApplicationDetailPage() {
     toast.success("Note added");
   };
 
-  const supervisorMatches = academicSupervisors.filter((s) => {
-    const q = assignSearch.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      `${s.firstName} ${s.lastName}`.toLowerCase().includes(q) ||
-      s.department.toLowerCase().includes(q) ||
-      s.staffNumber.toLowerCase().includes(q)
-    );
-  });
+  const studentFaculty = student ? findFacultyById(student.facultyId) : null;
+  const activeSupervisors = academicSupervisors.filter((s) => s.status === "active");
+  const supervisorMatches = (list: typeof academicSupervisors) =>
+    list.filter((s) => {
+      const q = assignSearch.trim().toLowerCase();
+      if (!q) return true;
+      return (
+        `${s.firstName} ${s.lastName}`.toLowerCase().includes(q) ||
+        s.department.toLowerCase().includes(q) ||
+        s.staffNumber.toLowerCase().includes(q)
+      );
+    });
+  const sameFacultySupervisors = supervisorMatches(
+    activeSupervisors.filter((s) => student && s.facultyId === student.facultyId),
+  );
+  const otherFacultySupervisors = supervisorMatches(
+    activeSupervisors.filter((s) => !student || s.facultyId !== student.facultyId),
+  );
+
 
   const decided =
     app.approvalStatus === "approved" || app.approvalStatus === "rejected";
@@ -349,9 +388,15 @@ function ApplicationDetailPage() {
                 {student?.regNumber} · {app.department}
               </div>
             </div>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/students">View Full Profile</Link>
+            <Button asChild variant="outline" size="sm" disabled={!student}>
+              <Link
+                to="/students"
+                search={{ view: student?.id, add: undefined }}
+              >
+                View Full Profile
+              </Link>
             </Button>
+
           </CardContent>
         </Card>
 
@@ -372,9 +417,15 @@ function ApplicationDetailPage() {
                   : "—"}
               </div>
             </div>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/companies">View Company</Link>
+            <Button asChild variant="outline" size="sm" disabled={!company}>
+              <Link
+                to="/companies"
+                search={{ view: company?.id, add: undefined }}
+              >
+                View Company
+              </Link>
             </Button>
+
           </CardContent>
         </Card>
       </div>
@@ -787,62 +838,142 @@ function ApplicationDetailPage() {
       <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>
-              {supervisor ? "Reassign" : "Assign"} Academic Supervisor
-            </DialogTitle>
+            <DialogTitle>Assign Academic Supervisor</DialogTitle>
             <DialogDescription>
-              Search and pick a supervisor for this application.
+              {supervisor ? "Reassign the" : "Assign an"} academic supervisor
+              for this application.
             </DialogDescription>
           </DialogHeader>
+
+          {student && (
+            <div className="rounded-md border bg-muted/30 p-3 text-sm">
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Selected Student
+              </div>
+              <div className="font-medium">
+                {student.firstName} {student.lastName}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {studentFaculty?.name ?? "—"} · {student.department} · Level{" "}
+                {student.level} · {student.programmeType}
+              </div>
+            </div>
+          )}
+
           <div className="relative">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by name, department or staff number…"
+              placeholder="Search supervisors..."
               value={assignSearch}
               onChange={(e) => setAssignSearch(e.target.value)}
               className="pl-8"
             />
           </div>
-          <div className="max-h-72 overflow-y-auto rounded-md border">
-            {supervisorMatches.length === 0 && (
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                No matches.
+
+          <div className="max-h-72 space-y-3 overflow-y-auto">
+            <div>
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Supervisors — {studentFaculty?.name ?? "—"}
               </div>
-            )}
-            {supervisorMatches.map((s) => {
-              const selected = assignSelected === s.id;
-              return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setAssignSelected(s.id)}
-                  className={`flex w-full items-center justify-between gap-3 border-b p-3 text-left text-sm last:border-b-0 hover:bg-muted/50 ${
-                    selected ? "bg-primary/10" : ""
-                  }`}
-                >
-                  <div>
-                    <div className="font-medium">
-                      {s.title} {s.firstName} {s.lastName}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {s.department} · {s.staffNumber}
-                    </div>
+              <div className="rounded-md border">
+                {sameFacultySupervisors.length === 0 ? (
+                  <div className="p-3 text-center text-xs text-muted-foreground">
+                    No supervisors found in {studentFaculty?.name ?? "this faculty"}.
+                    Use the override option below to assign from another faculty.
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {s.studentsAssigned}/{s.maxLoad} load
+                ) : (
+                  sameFacultySupervisors.map((s) => {
+                    const selected = assignSelected === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setAssignSelected(s.id)}
+                        className={`flex w-full items-center justify-between gap-3 border-b p-3 text-left text-sm last:border-b-0 hover:bg-muted/50 ${
+                          selected ? "bg-primary/10" : ""
+                        }`}
+                      >
+                        <div>
+                          <div className="font-medium">
+                            {s.title} {s.firstName} {s.lastName}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {s.department} · {s.studentsAssigned} students
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {s.studentsAssigned}/{s.maxLoad} load
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="button"
+                onClick={() => setAssignOverride((v) => !v)}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                {assignOverride ? "▾" : "▸"} Assign supervisor from a different faculty
+              </button>
+              {assignOverride && (
+                <div className="mt-2">
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Other Faculties (Override)
                   </div>
-                </button>
-              );
-            })}
+                  <div className="rounded-md border">
+                    {otherFacultySupervisors.length === 0 ? (
+                      <div className="p-3 text-center text-xs text-muted-foreground">
+                        No supervisors match.
+                      </div>
+                    ) : (
+                      otherFacultySupervisors.map((s) => {
+                        const selected = assignSelected === s.id;
+                        const sFac = findFacultyById(s.facultyId);
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => setAssignSelected(s.id)}
+                            className={`flex w-full items-center justify-between gap-3 border-b p-3 text-left text-sm last:border-b-0 hover:bg-muted/50 ${
+                              selected ? "bg-primary/10" : ""
+                            }`}
+                          >
+                            <div>
+                              <div className="font-medium">
+                                {s.title} {s.firstName} {s.lastName}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {sFac?.name ?? s.department} · {s.studentsAssigned} students
+                              </div>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {s.studentsAssigned}/{s.maxLoad} load
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setAssignOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={submitAssign}>Save Assignment</Button>
+            <Button onClick={submitAssign} disabled={!assignSelected}>
+              Assign
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
