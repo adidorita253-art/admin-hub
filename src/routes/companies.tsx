@@ -116,9 +116,19 @@ function CompaniesPage() {
   useEffect(() => {
     if (search.add) {
       setAdding(true);
-      navigate({ search: { add: undefined }, replace: true });
+      navigate({ search: { add: undefined, view: search.view }, replace: true });
     }
-  }, [search.add, navigate]);
+  }, [search.add, search.view, navigate]);
+  useEffect(() => {
+    if (search.view) {
+      const c = seed.find((x) => x.id === search.view);
+      if (c) {
+        setViewing(c);
+        navigate({ search: { add: search.add, view: undefined }, replace: true });
+      }
+    }
+  }, [search.view, search.add, navigate]);
+
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
