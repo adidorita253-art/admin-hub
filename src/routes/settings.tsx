@@ -11,7 +11,9 @@ import {
   BookOpen,
   Landmark,
   Save,
+  KeyRound,
 } from "lucide-react";
+import { appendAuditLog } from "@/lib/audit-logs-data";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
