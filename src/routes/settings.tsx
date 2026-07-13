@@ -87,6 +87,9 @@ function SettingsPage() {
           <TabsTrigger value="branding">
             <Palette className="size-4" /> Branding & QR
           </TabsTrigger>
+          <TabsTrigger value="account">
+            <KeyRound className="size-4" /> Account
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="period" className="mt-4">
