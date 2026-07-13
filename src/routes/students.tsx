@@ -1197,9 +1197,10 @@ function AssignSupervisorDialog({
   const [sup, setSup] = useState<string>("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [override, setOverride] = useState(false);
 
   useEffect(() => {
-    if (student) { setSup(""); setSearch(""); setConfirmOpen(false); }
+    if (student) { setSup(""); setSearch(""); setConfirmOpen(false); setOverride(false); }
   }, [student]);
 
   if (!student) return null;
@@ -1212,7 +1213,7 @@ function AssignSupervisorDialog({
     a.firstName.toLowerCase().includes(q) ||
     a.lastName.toLowerCase().includes(q) ||
     a.department.toLowerCase().includes(q);
-  const recommended = active.filter((a) => a.facultyId === student.facultyId && matches(a));
+  const sameFaculty = active.filter((a) => a.facultyId === student.facultyId && matches(a));
   const others = active.filter((a) => a.facultyId !== student.facultyId && matches(a));
   const picked = academicSupervisors.find((a) => a.id === sup);
 
@@ -1238,19 +1239,33 @@ function AssignSupervisorDialog({
 
         <div className="max-h-72 space-y-3 overflow-y-auto">
           <SupervisorGroup
-            heading={`RECOMMENDED (${fac?.name ?? "same faculty"})`}
-            list={recommended}
+            heading={`Supervisors — ${fac?.name ?? "same faculty"}`}
+            list={sameFaculty}
             selectedId={sup}
             onSelect={setSup}
-            emptyLabel="No same-faculty supervisors available."
+            emptyLabel={`No supervisors found in ${fac?.name ?? "this faculty"}. Use the override option below to assign from another faculty.`}
           />
-          <SupervisorGroup
-            heading="OTHER FACULTIES"
-            list={others}
-            selectedId={sup}
-            onSelect={setSup}
-            emptyLabel="No other supervisors match."
-          />
+
+          <div>
+            <button
+              type="button"
+              onClick={() => setOverride((v) => !v)}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              {override ? "▾" : "▸"} Assign supervisor from a different faculty (Override)
+            </button>
+            {override && (
+              <div className="mt-2">
+                <SupervisorGroup
+                  heading="Other Faculties (Override)"
+                  list={others}
+                  selectedId={sup}
+                  onSelect={setSup}
+                  emptyLabel="No other supervisors match."
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         <DialogFooter>
@@ -1274,6 +1289,7 @@ function AssignSupervisorDialog({
     </Dialog>
   );
 }
+
 
 function SupervisorGroup({
   heading,
@@ -1345,25 +1361,35 @@ function BulkAssignSupervisorDialog({
   const [sup, setSup] = useState<string>("");
   const [search, setSearch] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [override, setOverride] = useState(false);
 
   useEffect(() => {
-    if (open) { setSup(""); setSearch(""); setConfirmOpen(false); }
+    if (open) { setSup(""); setSearch(""); setConfirmOpen(false); setOverride(false); }
   }, [open]);
 
-  const list = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return academicSupervisors
-      .filter((a) => a.status === "active")
-      .filter((a) => {
-        if (!q) return true;
-        return (
-          a.firstName.toLowerCase().includes(q) ||
-          a.lastName.toLowerCase().includes(q) ||
-          a.department.toLowerCase().includes(q) ||
-          a.staffNumber.toLowerCase().includes(q)
-        );
-      });
-  }, [search]);
+  // Detect faculty of selected students
+  const facultyIds = Array.from(new Set(students.map((s) => s.facultyId).filter(Boolean)));
+  const mixedFaculties = facultyIds.length > 1;
+  const sharedFacultyId = facultyIds.length === 1 ? facultyIds[0] : null;
+  const sharedFaculty = sharedFacultyId ? findFacultyById(sharedFacultyId) : null;
+
+  const q = search.trim().toLowerCase();
+  const matchesSearch = (a: typeof academicSupervisors[number]) =>
+    !q ||
+    a.firstName.toLowerCase().includes(q) ||
+    a.lastName.toLowerCase().includes(q) ||
+    a.department.toLowerCase().includes(q) ||
+    a.staffNumber.toLowerCase().includes(q);
+
+  const activeSups = academicSupervisors.filter((a) => a.status === "active");
+  const sameFaculty = useMemo(
+    () => (sharedFacultyId ? activeSups.filter((a) => a.facultyId === sharedFacultyId && matchesSearch(a)) : []),
+    [sharedFacultyId, search, activeSups],
+  );
+  const otherFaculty = useMemo(
+    () => (sharedFacultyId ? activeSups.filter((a) => a.facultyId !== sharedFacultyId && matchesSearch(a)) : []),
+    [sharedFacultyId, search, activeSups],
+  );
 
   const alreadyAssignedCount = students.filter((s) => s.academicSupervisorId).length;
   const picked = academicSupervisors.find((a) => a.id === sup);
@@ -1385,12 +1411,13 @@ function BulkAssignSupervisorDialog({
               {students.slice(0, 20).map((s) => {
                 const prog = findProgrammeById(s.programmeId);
                 const dept = findDepartmentById(s.departmentId);
+                const sFac = findFacultyById(s.facultyId);
                 return (
                   <li key={s.id} className="flex items-center gap-2">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                     <span className="font-medium">{s.firstName} {s.lastName}</span>
                     <span className="text-muted-foreground text-xs">
-                      — {dept?.name ?? s.department} — Level {s.level}
+                      — {sFac?.name ?? ""} · {dept?.name ?? s.department} · Level {s.level}
                       {prog ? ` (${prog.type})` : ""}
                     </span>
                   </li>
@@ -1403,56 +1430,64 @@ function BulkAssignSupervisorDialog({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs">Select Academic Supervisor</Label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search and select a supervisor…"
-              className="pl-8"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+        {mixedFaculties ? (
+          <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <strong>Selected students are from different faculties.</strong> For accurate
+              assignment, please select students from the same faculty and assign separately.
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Admin can assign any supervisor to any student — there is no faculty restriction.
-          </p>
-          <div className="max-h-56 overflow-y-auto rounded-md border">
-            {list.map((a) => {
-              const active = sup === a.id;
-              const overloaded = a.studentsAssigned >= 20;
-              return (
-                <button
-                  key={a.id}
-                  type="button"
-                  onClick={() => setSup(a.id)}
-                  className={`flex w-full items-center justify-between gap-3 border-b px-3 py-2 text-left text-sm last:border-b-0 hover:bg-muted/60 ${
-                    active ? "bg-primary/10" : ""
-                  }`}
-                >
-                  <div className="min-w-0">
-                    <div className="truncate font-medium">
-                      {a.title} {a.firstName} {a.lastName}
-                    </div>
-                    <div className="truncate text-xs text-muted-foreground">
-                      {a.department} • {a.studentsAssigned} students
-                    </div>
-                  </div>
-                  {overloaded && (
-                    <Badge variant="outline" className="border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-                      <AlertTriangle className="mr-1 h-3 w-3" /> High load
-                    </Badge>
-                  )}
-                </button>
-              );
-            })}
-            {list.length === 0 && (
-              <div className="p-4 text-center text-sm text-muted-foreground">No supervisors match.</div>
-            )}
-          </div>
-        </div>
+        ) : (
+          <div className="space-y-2">
+            <Label className="text-xs">Select Academic Supervisor</Label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search supervisors…"
+                className="pl-8"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Showing supervisors from {sharedFaculty?.name ?? "the selected students' faculty"}.
+            </p>
 
-        {alreadyAssignedCount > 0 && (
+            <div className="max-h-56 space-y-3 overflow-y-auto">
+              <SupervisorGroup
+                heading={`Supervisors — ${sharedFaculty?.name ?? "same faculty"}`}
+                list={sameFaculty}
+                selectedId={sup}
+                onSelect={setSup}
+                emptyLabel={`No supervisors found in ${sharedFaculty?.name ?? "this faculty"}. Add supervisors to this faculty first or use the override option below.`}
+              />
+
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setOverride((v) => !v)}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  {override ? "▾" : "▸"} Assign from a different faculty (Override)
+                </button>
+                {override && (
+                  <div className="mt-2">
+                    <SupervisorGroup
+                      heading="Other Faculties (Override)"
+                      list={otherFaculty}
+                      selectedId={sup}
+                      onSelect={setSup}
+                      emptyLabel="No other supervisors match."
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {alreadyAssignedCount > 0 && !mixedFaculties && (
           <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
@@ -1465,7 +1500,7 @@ function BulkAssignSupervisorDialog({
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button
-            disabled={!sup || students.length === 0}
+            disabled={!sup || students.length === 0 || mixedFaculties}
             onClick={() => setConfirmOpen(true)}
           >
             Assign to All ({students.length})
@@ -1488,6 +1523,7 @@ function BulkAssignSupervisorDialog({
     </Dialog>
   );
 }
+
 
 function ConfirmDialog({
   open,
