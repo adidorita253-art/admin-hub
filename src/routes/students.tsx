@@ -1197,9 +1197,10 @@ function AssignSupervisorDialog({
   const [sup, setSup] = useState<string>("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [override, setOverride] = useState(false);
 
   useEffect(() => {
-    if (student) { setSup(""); setSearch(""); setConfirmOpen(false); }
+    if (student) { setSup(""); setSearch(""); setConfirmOpen(false); setOverride(false); }
   }, [student]);
 
   if (!student) return null;
@@ -1212,7 +1213,7 @@ function AssignSupervisorDialog({
     a.firstName.toLowerCase().includes(q) ||
     a.lastName.toLowerCase().includes(q) ||
     a.department.toLowerCase().includes(q);
-  const recommended = active.filter((a) => a.facultyId === student.facultyId && matches(a));
+  const sameFaculty = active.filter((a) => a.facultyId === student.facultyId && matches(a));
   const others = active.filter((a) => a.facultyId !== student.facultyId && matches(a));
   const picked = academicSupervisors.find((a) => a.id === sup);
 
@@ -1238,19 +1239,33 @@ function AssignSupervisorDialog({
 
         <div className="max-h-72 space-y-3 overflow-y-auto">
           <SupervisorGroup
-            heading={`RECOMMENDED (${fac?.name ?? "same faculty"})`}
-            list={recommended}
+            heading={`Supervisors — ${fac?.name ?? "same faculty"}`}
+            list={sameFaculty}
             selectedId={sup}
             onSelect={setSup}
-            emptyLabel="No same-faculty supervisors available."
+            emptyLabel={`No supervisors found in ${fac?.name ?? "this faculty"}. Use the override option below to assign from another faculty.`}
           />
-          <SupervisorGroup
-            heading="OTHER FACULTIES"
-            list={others}
-            selectedId={sup}
-            onSelect={setSup}
-            emptyLabel="No other supervisors match."
-          />
+
+          <div>
+            <button
+              type="button"
+              onClick={() => setOverride((v) => !v)}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              {override ? "▾" : "▸"} Assign supervisor from a different faculty (Override)
+            </button>
+            {override && (
+              <div className="mt-2">
+                <SupervisorGroup
+                  heading="Other Faculties (Override)"
+                  list={others}
+                  selectedId={sup}
+                  onSelect={setSup}
+                  emptyLabel="No other supervisors match."
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         <DialogFooter>
@@ -1274,6 +1289,7 @@ function AssignSupervisorDialog({
     </Dialog>
   );
 }
+
 
 function SupervisorGroup({
   heading,
