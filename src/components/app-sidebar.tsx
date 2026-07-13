@@ -75,9 +75,27 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const isActive = (url: string) =>
     url === "/" ? pathname === "/" : pathname.startsWith(url);
   const userMgmtOpen = userMgmtItems.some((i) => isActive(i.url));
+
+  const handleLogout = () => {
+    appendAuditLog({
+      actorName: "Admin User",
+      actorEmail: "admin@htu.edu.gh",
+      actorRole: "Administrator",
+      action: "logout",
+      module: "auth",
+      target: "Admin User",
+      description: "Administrator signed out.",
+      severity: "info",
+    });
+    setLogoutOpen(false);
+    toast.success("Signed out successfully");
+    navigate({ to: "/" });
+  };
 
   return (
     <Sidebar collapsible="icon">
