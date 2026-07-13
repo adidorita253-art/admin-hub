@@ -116,6 +116,9 @@ function SettingsPage() {
         <TabsContent value="branding" className="mt-4">
           <BrandingTab />
         </TabsContent>
+        <TabsContent value="account" className="mt-4">
+          <AccountTab />
+        </TabsContent>
       </Tabs>
     </div>
   );
