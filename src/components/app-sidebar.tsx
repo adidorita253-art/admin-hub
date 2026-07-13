@@ -1,4 +1,17 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { appendAuditLog } from "@/lib/audit-logs-data";
 import {
   LayoutDashboard,
   Users,
@@ -62,9 +75,27 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const isActive = (url: string) =>
     url === "/" ? pathname === "/" : pathname.startsWith(url);
   const userMgmtOpen = userMgmtItems.some((i) => isActive(i.url));
+
+  const handleLogout = () => {
+    appendAuditLog({
+      actorName: "Admin User",
+      actorEmail: "admin@htu.edu.gh",
+      actorRole: "Administrator",
+      action: "logout",
+      module: "auth",
+      target: "Admin User",
+      description: "Administrator signed out.",
+      severity: "info",
+    });
+    setLogoutOpen(false);
+    toast.success("Signed out successfully");
+    navigate({ to: "/" });
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -169,12 +200,27 @@ export function AppSidebar() {
             <button
               className="rounded-md p-1.5 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
               aria-label="Logout"
+              onClick={() => setLogoutOpen(true)}
             >
               <LogOut className="h-4 w-4" />
             </button>
           )}
         </div>
       </SidebarFooter>
+      <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign out?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You'll be returned to the sign-in screen. Any unsaved changes will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout}>Sign out</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sidebar>
   );
 }
