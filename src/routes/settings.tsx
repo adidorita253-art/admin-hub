@@ -717,3 +717,121 @@ function BrandingTab() {
     </Card>
   );
 }
+
+/* -------------------- Account (Change Password) -------------------- */
+function AccountTab() {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const strength = (() => {
+    let s = 0;
+    if (next.length >= 8) s++;
+    if (/[A-Z]/.test(next)) s++;
+    if (/[0-9]/.test(next)) s++;
+    if (/[^A-Za-z0-9]/.test(next)) s++;
+    return s;
+  })();
+  const strengthLabel = ["Too short", "Weak", "Fair", "Good", "Strong"][strength];
+
+  const submit = () => {
+    if (!current) return toast.error("Enter your current password");
+    if (next.length < 8) return toast.error("New password must be at least 8 characters");
+    if (strength < 3) return toast.error("Password is too weak — mix upper, lower, numbers, symbols");
+    if (next !== confirm) return toast.error("Passwords do not match");
+    if (next === current) return toast.error("New password must be different from current");
+
+    setSaving(true);
+    setTimeout(() => {
+      appendAuditLog({
+        actorName: "Admin User",
+        actorEmail: "admin@htu.edu.gh",
+        actorRole: "Administrator",
+        action: "reset_password",
+        module: "auth",
+        target: "Admin User",
+        description: "Administrator changed their own password.",
+        severity: "info",
+      });
+      setSaving(false);
+      setCurrent("");
+      setNext("");
+      setConfirm("");
+      toast.success("Password updated successfully");
+    }, 400);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Change Password</CardTitle>
+        <CardDescription>
+          Update the password for your administrator account. You'll stay signed in on this device.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="max-w-lg space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="pw-current">Current password</Label>
+          <Input
+            id="pw-current"
+            type="password"
+            autoComplete="current-password"
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="pw-new">New password</Label>
+          <Input
+            id="pw-new"
+            type="password"
+            autoComplete="new-password"
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+          />
+          {next.length > 0 && (
+            <div className="flex items-center gap-2 text-xs">
+              <div className="flex h-1.5 flex-1 overflow-hidden rounded bg-muted">
+                <div
+                  className={
+                    "h-full transition-all " +
+                    (strength <= 1
+                      ? "w-1/4 bg-destructive"
+                      : strength === 2
+                        ? "w-2/4 bg-yellow-500"
+                        : strength === 3
+                          ? "w-3/4 bg-blue-500"
+                          : "w-full bg-green-600")
+                  }
+                />
+              </div>
+              <span className="text-muted-foreground">{strengthLabel}</span>
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">
+            At least 8 characters with a mix of upper, lower, numbers, and symbols.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="pw-confirm">Confirm new password</Label>
+          <Input
+            id="pw-confirm"
+            type="password"
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+          />
+          {confirm.length > 0 && confirm !== next && (
+            <p className="text-xs text-destructive">Passwords do not match</p>
+          )}
+        </div>
+        <div className="flex justify-end pt-2">
+          <Button onClick={submit} disabled={saving}>
+            <Save className="size-4" /> {saving ? "Updating…" : "Update password"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
