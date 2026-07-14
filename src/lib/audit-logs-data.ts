@@ -332,3 +332,7 @@ export const auditLogs: AuditLog[] = [
     severity: "info",
   },
 ];
+
+// Initialize snapshot after auditLogs seed array is defined.
+auditLogsSnapshot = auditLogs.slice();
+
