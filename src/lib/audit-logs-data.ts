@@ -90,6 +90,14 @@ export const AUDIT_ACTIONS: { value: AuditActionType; label: string }[] = [
 const now = Date.now();
 const mins = (n: number) => new Date(now - n * 60_000).toISOString();
 
+const auditListeners = new Set<() => void>();
+export const subscribeAuditLogs = (l: () => void) => {
+  auditListeners.add(l);
+  return () => auditListeners.delete(l);
+};
+export const getAuditLogsSnapshot = () => auditLogsSnapshot;
+let auditLogsSnapshot: AuditLog[] = [];
+
 export function appendAuditLog(
   entry: Omit<AuditLog, "id" | "at" | "ip" | "userAgent"> & Partial<Pick<AuditLog, "ip" | "userAgent">>,
 ): AuditLog {
@@ -101,6 +109,8 @@ export function appendAuditLog(
     ...entry,
   };
   auditLogs.unshift(log);
+  auditLogsSnapshot = auditLogs.slice();
+  auditListeners.forEach((l) => l());
   return log;
 }
 
